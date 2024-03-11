@@ -314,11 +314,12 @@ def plot_elbow_method(data, k_range, output_file_path):
 
 
 if __name__ == '__main__':
-    FILE_PATH = "fairness_bbq_dataset_with_embeddings.csv"
+    #FILE_PATH = "fairness_bbq_dataset_with_embeddings.csv"
+    FILE_PATH = "feature_extraction_text2.csv"
     print(f'reading file: {FILE_PATH}')
-    df = pd.read_csv(FILE_PATH)
-    y = df.performance
-    X = df.drop(columns=['text', 'performance'])
+    orig_df = pd.read_csv(FILE_PATH)
+    # y = orig_df.performance
+    # X = df.drop(columns=['text', 'performance'])
 
     # df = pd.read_csv('pii_financial_dataset_with_embeddings.csv')
     # y = df.Performance
@@ -332,8 +333,10 @@ if __name__ == '__main__':
     # indecies = np.argwhere(feature_importance > 10000)
     # indecies = list(indecies.flatten())
 
-    df = df.drop(columns=['text'])
-    #df = df.drop(columns=['Target', 'index'])
+    # df = df.drop(columns=['text'])
+    # df = df.drop(columns=['Target', 'index'])
+    df = orig_df
+    df = df.drop(columns=['text', 'id', 'performance'])
     columns = range(0, len(df.columns))
 
     feature_importance = []
@@ -353,8 +356,9 @@ if __name__ == '__main__':
     indices = list(indices.flatten())
 
     # new df
-    df_isolation = df.iloc[:, list(indices)].join(df[['performance']])
-    print(df_isolation)
+    # df_isolation = orig_df.iloc[:, list(indices)].join(orig_df[['performance']])
+    df_isolation = orig_df.iloc[:, list(indices)]
+    df_isolation.to_csv('selected_features.csv')
     df_isolation = df_isolation[df_isolation['performance'] == 0]
     df_isolation = df_isolation.drop(columns=['performance'])
     print(df_isolation)
@@ -362,11 +366,11 @@ if __name__ == '__main__':
     k_range = range(2, n_instances)  # Adjust the range based on your dataset and needs
     output_file_path = 'elbow_method.png'  # Path where the plot image will be saved
     plot_elbow_method(df_isolation, k_range, output_file_path)
-    # optimal_k = find_optimal_k(df_isolation, k_range)
-    # print(f"The optimal number of clusters is: {optimal_k}")
-    # kmeanModel = MiniBatchKMeans(n_clusters=optimal_k, batch_size=100).fit(df_isolation)
-    # prediction = kmeanModel.predict(df_isolation)
-    # df_isolation['prediction'] = prediction
+    optimal_k = find_optimal_k(df_isolation, k_range)
+    print(f"The optimal number of clusters is: {optimal_k}")
+    kmeanModel = MiniBatchKMeans(n_clusters=optimal_k, batch_size=100).fit(df_isolation)
+    prediction = kmeanModel.predict(df_isolation)
+    df_isolation['prediction'] = prediction
     # df_isolation['y'] = y
-    # df_isolation.to_csv('output.csv')
-    # print(df_isolation)
+    df_isolation.to_csv('output.csv')
+    print(df_isolation)
