@@ -321,8 +321,8 @@ def get_optimal_k(df,max_k=100, output_file_path='elbow_method.png'):
 
 
 if __name__ == '__main__':
-    FILE_PATH = "fairness_bbq_dataset_with_embeddings.csv"
-    #FILE_PATH = "feature_extraction_text2.csv"
+    #FILE_PATH = "fairness_bbq_dataset_with_embeddings.csv"
+    FILE_PATH = "full_dataset_feature_extraction_12-03-24.csv"
     print(f'reading file: {FILE_PATH}')
     orig_df = pd.read_csv(FILE_PATH)
     # y = orig_df.performance
@@ -343,13 +343,14 @@ if __name__ == '__main__':
     # df = df.drop(columns=['text'])
     # df = df.drop(columns=['Target', 'index'])
     df_selection = orig_df
-    df_selection = df_selection.drop(columns=['text', 'performance'])
+    #df_selection = df_selection.drop(columns=['text', 'performance'])
+    df_selection = df_selection.drop(columns=['text', 'performance', 'cluster'])
     columns = range(0, len(df_selection.columns))
 
     feature_importance = []
     print(f'starting ICALiNGAM')
     for i in range((len(columns) // 100) + 1):
-        model = lingam.ICALiNGAM(42, 2000)
+        model = lingam.ICALiNGAM(42, 1000)
         untill = min(len(columns), (1 + (i + 1) * 100))
         ling = model.fit(df_selection.iloc[:, [columns[0]] + list(columns[(1 + i * 100):untill])])
         if len(feature_importance) != 0:
@@ -365,6 +366,7 @@ if __name__ == '__main__':
     # new df
     # df_isolation = orig_df.iloc[:, list(indices)]i.join(org_df[['performance']])
     df_for_clustering = orig_df.iloc[:, list(indices)]
+    df_for_clustering.to_csv('feature_selection_test_070424.csv')
     df_for_clustering = df_for_clustering[df_for_clustering['performance'] == 0]
     df_for_clustering = df_for_clustering.drop(columns=['performance'])
     print(df_for_clustering)
@@ -376,5 +378,5 @@ if __name__ == '__main__':
     orig_df['cluster'] = -1  # Initialize all clusters to -1
     orig_df.loc[orig_df['performance'] == 0, 'cluster'] = prediction
     orig_df = orig_df.iloc[:, list(indices)].join(orig_df[['text','cluster']])
-    orig_df.to_csv('bad_prompts_clustering.csv')
+    #orig_df.to_csv('bad_prompts_clustering.csv')
     print(orig_df)

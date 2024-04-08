@@ -10,6 +10,7 @@ import readability
 from collections import Counter
 from sklearn.feature_extraction.text import TfidfVectorizer
 
+
 '''
 Function to load the prompt text from csv and extract only the prompts that had wrong response.
 Returns dataframe
@@ -64,6 +65,7 @@ def assign_topic_lda(text):
     # Sort topics by probability and return the topic with the highest probability
     return sorted(topics, key=lambda x: x[1], reverse=True)[0][0]
 
+
 def count_question_marks(text):
     return text.count('?')
 
@@ -116,6 +118,7 @@ def passive_voice_count(text):
                 break
     return passive_sentences
 
+
 def active_voice_count(text):
     doc = nlp(text)
     active_sentences = 0
@@ -128,11 +131,13 @@ def active_voice_count(text):
             active_sentences += 1
     return active_sentences
 
+
 def modal_verbs_count(text):
     doc = nlp(text)
     modals = ['can', 'could', 'may', 'might', 'must', 'shall', 'should', 'will', 'would']
     count = sum(1 for token in doc if token.lemma_ in modals)
     return count
+
 
 def conditional_sentences_count(text):
     doc = nlp(text)
@@ -142,9 +147,11 @@ def conditional_sentences_count(text):
             conditionals += 1
     return conditionals
 
+
 def sentence_count(text):
     doc = nlp(text)
     return len(list(doc.sents))
+
 
 def average_sentence_length(text):
     doc = nlp(text)
@@ -153,14 +160,17 @@ def average_sentence_length(text):
         return 0
     return np.mean([len(sentence) for sentence in sentences])
 
+
 def stop_words_count(text):
     doc = nlp(text)
     return sum(1 for token in doc if token.is_stop)
+
 
 def punctuation_diversity(text):
     doc = nlp(text)
     punctuations = [token.text for token in doc if token.is_punct]
     return len(set(punctuations))
+
 
 def analyze_text_readability(text):
     result = readability.getmeasures(text)
@@ -169,6 +179,7 @@ def analyze_text_readability(text):
         for sub_key, value in sub_dict.items():
             flat_result[f"{main_key}__{sub_key}"] = value
     return flat_result
+
 
 if __name__ == '__main__':
     FILE_PATH = "bad_prompts_clustering.csv"
@@ -203,7 +214,15 @@ if __name__ == '__main__':
     df['stop_words_count'] = df['text'].apply(stop_words_count)
     df['punctuation_diversity'] = df['text'].apply(punctuation_diversity)
 
+    # Adding 35 more features
     metrics_df = pd.DataFrame(df['text'].apply(analyze_text_readability).tolist())
+
+    # sentence beginnings__conjunction is empty
+    # sentence info__paragraphs always 1
+    # sentence info__sentences always 1
+    # sentence info__sentences_per_paragraph always 1
+
+
     # Join the original DataFrame with the metrics DataFrame
     df = df.join(metrics_df)
 
