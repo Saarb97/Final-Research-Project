@@ -320,63 +320,48 @@ def get_optimal_k(df,max_k=100, output_file_path='elbow_method.png'):
     print(f"The optimal number of clusters is: {optimal_k}")
 
 
-if __name__ == '__main__':
-    #FILE_PATH = "fairness_bbq_dataset_with_embeddings.csv"
-    FILE_PATH = "full_dataset_feature_extraction_12-03-24.csv"
-    print(f'reading file: {FILE_PATH}')
-    orig_df = pd.read_csv(FILE_PATH)
-    # y = orig_df.performance
-    # X = df.drop(columns=['text', 'performance'])
+def read_data(file_path):
+    print(f'Reading file: {file_path}')
+    return pd.read_csv(file_path)
 
-    # df = pd.read_csv('pii_financial_dataset_with_embeddings.csv')
-    # y = df.Performance
-    # X = df.drop(columns=['Target', 'Performance', 'index'])
 
-    # print(f'creating isolation forest')
-    # clf = IsolationForest()
-    # clf.fit(X)
-    # feature_importance = diffi_score(clf, X)
-    # print(f'creating indices')
-    # indecies = np.argwhere(feature_importance > 10000)
-    # indecies = list(indecies.flatten())
-
-    # df = df.drop(columns=['text'])
-    # df = df.drop(columns=['Target', 'index'])
-    df_selection = orig_df
-    #df_selection = df_selection.drop(columns=['text', 'performance'])
-    df_selection = df_selection.drop(columns=['text', 'performance', 'cluster'])
-    columns = range(0, len(df_selection.columns))
-
+def run_icalingam(data):
+    print('Starting ICALiNGAM')
+    df_selection = data.drop(columns=['text', 'performance'])
+    columns = range(len(df_selection.columns))
     feature_importance = []
-    print(f'starting ICALiNGAM')
     for i in range((len(columns) // 100) + 1):
-        model = lingam.ICALiNGAM(42, 1000)
-        untill = min(len(columns), (1 + (i + 1) * 100))
-        ling = model.fit(df_selection.iloc[:, [columns[0]] + list(columns[(1 + i * 100):untill])])
-        if len(feature_importance) != 0:
-            feature_importance = np.concatenate((feature_importance,
-                                                 model.adjacency_matrix_[0][1:]), axis=0)
+        model = lingam.ICALiNGAM(42, 3000)
+        until = min(len(columns), (1 + (i + 1) * 100))
+        model.fit(df_selection.iloc[:, [columns[0]] + list(columns[(1 + i * 100):until])])
+        if feature_importance:
+            feature_importance = np.concatenate((feature_importance, model.adjacency_matrix_[0][1:]), axis=0)
         else:
             feature_importance = model.adjacency_matrix_[0][1:]
-
     feature_importance = np.concatenate(([0], feature_importance), axis=0)
-    indices = np.argwhere(feature_importance != 0)
-    indices = list(indices.flatten())
+    indices = np.argwhere(feature_importance != 0).flatten()
+    return indices
 
-    # new df
-    # df_isolation = orig_df.iloc[:, list(indices)]i.join(org_df[['performance']])
-    df_for_clustering = orig_df.iloc[:, list(indices)]
-    df_for_clustering.to_csv('feature_selection_test_070424.csv')
-    df_for_clustering = df_for_clustering[df_for_clustering['performance'] == 0]
-    df_for_clustering = df_for_clustering.drop(columns=['performance'])
-    print(df_for_clustering)
-    n_instances, _ = df_for_clustering.shape
-    # optimal_k = get_optimal_k(max_k=100,output_file_path='elbow_method.png',df=df_isolation)
-    kmeanModel = MiniBatchKMeans(n_clusters=191, batch_size=100).fit(df_for_clustering)
-    prediction = kmeanModel.predict(df_for_clustering)
 
-    orig_df['cluster'] = -1  # Initialize all clusters to -1
-    orig_df.loc[orig_df['performance'] == 0, 'cluster'] = prediction
-    orig_df = orig_df.iloc[:, list(indices)].join(orig_df[['text','cluster']])
-    #orig_df.to_csv('bad_prompts_clustering.csv')
-    print(orig_df)
+def cluster_data(data, indices):
+    df_for_clustering = data.iloc[:, list(indices)]
+    kmean_model = MiniBatchKMeans(n_clusters=20, batch_size=100).fit(df_for_clustering)
+    return kmean_model.predict(df_for_clustering)
+
+
+def save_data(data, file_name):
+    data.to_csv(file_name, index=False)
+
+
+if __name__ == '__main__':
+    FILE_PATH = "fairness_bbq_dataset_with_embeddings.csv"
+    df = read_data(FILE_PATH)
+    indices = run_icalingam(df)
+    predictions = cluster_data(df, indices)
+
+    post_selection_df = df[['text', 'performance']]
+    post_selection_df['cluster'] = predictions
+    cluster_col = post_selection_df.pop('cluster')
+    post_selection_df.insert(2, 'cluster', cluster_col)
+
+    save_data(post_selection_df, 'all_clustering_10_04.csv')

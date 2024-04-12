@@ -6,15 +6,14 @@ import spacy
 from gensim import corpora, models
 from gensim.utils import simple_preprocess
 from spacy.lang.en.stop_words import STOP_WORDS
+from scipy.stats import chi2_contingency
 import readability
 from collections import Counter
 from sklearn.feature_extraction.text import TfidfVectorizer
+import nltk
+nltk.download('punkt')
 
 
-'''
-Function to load the prompt text from csv and extract only the prompts that had wrong response.
-Returns dataframe
-'''
 def load_csv(path):
     try:
         df = pd.read_csv(path)
@@ -59,7 +58,7 @@ def preprocess_text_for_lda(text):
     return simple_preprocess(text, deacc=True)
 
 
-def assign_topic_lda(text):
+def assign_topic_lda(text, dictionary, lda_model):
     bow = dictionary.doc2bow(text)
     topics = lda_model.get_document_topics(bow)
     # Sort topics by probability and return the topic with the highest probability
@@ -181,17 +180,7 @@ def analyze_text_readability(text):
     return flat_result
 
 
-if __name__ == '__main__':
-    FILE_PATH = "bad_prompts_clustering.csv"
-    #df = load_csv(FILE_PATH)
-    df = pd.read_csv(FILE_PATH)
-
-
-    # Load spaCy's language model
-    nlp = spacy.load("en_core_web_sm")
-    print(f'started calculating features')
-    results = readability.getmeasures('this a test text. hello and goodbye!', lang='en')
-    print(results)
+def apply_basic_text_features(df):
     df[['polarity', 'subjectivity']] = df['text'].apply(lambda x: calculate_sentiment(x)).apply(pd.Series)
     df['readability_score'] = df['text'].apply(lambda x: calculate_readability(x))
     df['syntactic_complexity'] = df['text'].apply(lambda x: calculate_syntactic_complexity(x))
@@ -213,32 +202,38 @@ if __name__ == '__main__':
     df['average_sentence_length'] = df['text'].apply(average_sentence_length)
     df['stop_words_count'] = df['text'].apply(stop_words_count)
     df['punctuation_diversity'] = df['text'].apply(punctuation_diversity)
-
-    # Adding 35 more features
+    df['named_entities'] = df['text'].apply(lambda x: extract_entities(x))
+    # Adding 35 more features from readability package
     metrics_df = pd.DataFrame(df['text'].apply(analyze_text_readability).tolist())
-
-    # sentence beginnings__conjunction is empty
-    # sentence info__paragraphs always 1
-    # sentence info__sentences always 1
-    # sentence info__sentences_per_paragraph always 1
-
-
-    # Join the original DataFrame with the metrics DataFrame
     df = df.join(metrics_df)
+    return df
 
-    # df['named_entities'] = df['text'].apply(lambda x: extract_entities(x))
-    # print(f'preprocessing text for lda')
-    # # Apply preprocessing to the DataFrame
-    # df['processed_LDA_text'] = df['text'].apply(preprocess_text_for_lda)
-    # print(f'Create a dictionary and corpus for LDA')
-    # # Create a dictionary and corpus for LDA
-    # dictionary = corpora.Dictionary(df['processed_LDA_text'])
-    # corpus = [dictionary.doc2bow(text) for text in df['processed_LDA_text']]
-    # print(f'Train the LDA model')
-    # # Train the LDA model
-    # lda_model = models.LdaMulticore(corpus, num_topics=100, id2word=dictionary, passes=50)
-    # print(f'classifying topics')
-    # df['topic'] = df['processed_LDA_text'].apply(assign_topic_lda)
 
-    df.to_csv('full_dataset_feature_extraction_12-03-24.csv')
+def apply_LDA(df):
+    print(f'preprocessing text for lda')
+    # Apply preprocessing to the DataFrame
+    df['processed_LDA_text'] = df['text'].apply(preprocess_text_for_lda)
+    print(f'Create a dictionary and corpus for LDA')
+    # Create a dictionary and corpus for LDA
+    dictionary = corpora.Dictionary(df['processed_LDA_text'])
+    corpus = [dictionary.doc2bow(text) for text in df['processed_LDA_text']]
+    print(f'Train the LDA model')
+    # Train the LDA model
+    lda_model = models.LdaMulticore(corpus, num_topics=100, id2word=dictionary, passes=50)
+    print(f'classifying topics')
+    df['topic'] = df['processed_LDA_text'].apply(lambda text: assign_topic_lda(text, dictionary, lda_model))
+    df.drop(['processed_LDA_text'], axis=1, inplace=True)
+    return df
+
+
+if __name__ == '__main__':
+    FILE_PATH = "all_clustering_10_04.csv"
+    df = pd.read_csv(FILE_PATH)
+
+    # Load spaCy's language model
+    nlp = spacy.load("en_core_web_sm")
+
+    df = apply_basic_text_features(df)
+    df = apply_LDA(df)
+    df.to_csv('full_dataset_feature_extraction_10-04.csv', Index=False)
 
