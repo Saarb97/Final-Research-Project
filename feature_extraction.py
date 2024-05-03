@@ -182,7 +182,7 @@ def analyze_text_readability(text):
 
 def apply_basic_text_features(df):
     df[['polarity', 'subjectivity']] = df['text'].apply(lambda x: calculate_sentiment(x)).apply(pd.Series)
-    df['readability_score'] = df['text'].apply(lambda x: calculate_readability(x))
+    df['flesch_reading_ease'] = df['text'].apply(lambda x: calculate_readability(x))
     df['syntactic_complexity'] = df['text'].apply(lambda x: calculate_syntactic_complexity(x))
     df['lexical_diversity'] = df['text'].apply(lambda x: calculate_lexical_diversity(x))
     df['text_length'] = df['text'].apply(len)

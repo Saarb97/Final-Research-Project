@@ -334,7 +334,7 @@ def run_icalingam(data):
         model = lingam.ICALiNGAM(42, 3000)
         until = min(len(columns), (1 + (i + 1) * 100))
         model.fit(df_selection.iloc[:, [columns[0]] + list(columns[(1 + i * 100):until])])
-        if feature_importance:
+        if len(feature_importance) != 0:
             feature_importance = np.concatenate((feature_importance, model.adjacency_matrix_[0][1:]), axis=0)
         else:
             feature_importance = model.adjacency_matrix_[0][1:]
@@ -357,11 +357,12 @@ if __name__ == '__main__':
     FILE_PATH = "fairness_bbq_dataset_with_embeddings.csv"
     df = read_data(FILE_PATH)
     indices = run_icalingam(df)
-    predictions = cluster_data(df, indices)
-
-    post_selection_df = df[['text', 'performance']]
-    post_selection_df['cluster'] = predictions
-    cluster_col = post_selection_df.pop('cluster')
-    post_selection_df.insert(2, 'cluster', cluster_col)
-
-    save_data(post_selection_df, 'all_clustering_10_04.csv')
+    print(len(indices))
+    # predictions = cluster_data(df, indices)
+    #
+    # post_selection_df = df[['text', 'performance']]
+    # post_selection_df['cluster'] = predictions
+    # cluster_col = post_selection_df.pop('cluster')
+    # post_selection_df.insert(2, 'cluster', cluster_col)
+    #
+    # save_data(post_selection_df, 'all_clustering_10_04.csv')

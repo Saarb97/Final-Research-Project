@@ -28,26 +28,19 @@ def calculate_descriptive_stats(group):
     return cluster_df
 
 
-def calculate_statistical_significance(group, cluster, passed_prompts):
+def calculate_statistical_significance(group, passed_prompts):
     u_stats = []
     p_vals = []
-    if cluster == -1:
-        failed_prompts = get_failed_prompts(group)
-        for col in passed_prompts.columns:
-            u_stat, p_val = mannwhitneyu(passed_prompts[col], failed_prompts[col], alternative='two-sided')
-            u_stats.append(u_stat)
-            p_vals.append(p_val)
-    else:
-        for col in group.drop(['text', 'cluster', 'performance', 'named_entities'], axis=1).columns:
-            u_stat, p_val = mannwhitneyu(group[col], passed_prompts[col], alternative='two-sided')
-            u_stats.append(u_stat)
-            p_vals.append(p_val)
+    for col in group.drop(['text', 'cluster', 'performance', 'named_entities'], axis=1).columns:
+        u_stat, p_val = mannwhitneyu(group[col], passed_prompts[col], alternative='two-sided')
+        u_stats.append(u_stat)
+        p_vals.append(p_val)
     return u_stats, p_vals
 
 
-def process_cluster(group, cluster, passed_prompts):
+def process_cluster(group, passed_prompts):
     cluster_df = calculate_descriptive_stats(group)
-    u_stats, p_vals = calculate_statistical_significance(group, cluster, passed_prompts)
+    u_stats, p_vals = calculate_statistical_significance(group, passed_prompts)
     cluster_df = cluster_df.assign(u_stat=u_stats, p_val=p_vals)
     return cluster_df
 
@@ -64,7 +57,7 @@ if __name__ == '__main__':
         group.to_csv(f'clusters csv\\{cluster}_data.csv', index=False)
 
     for cluster, group in cluster_groups:
-        cluster_dfs[cluster] = process_cluster(group, cluster, passed_prompts)
+        cluster_dfs[cluster] = process_cluster(group, passed_prompts)
 
     for cluster, df in cluster_dfs.items():
         df.to_csv(f'clusters csv\\{cluster}_statistics.csv')
