@@ -11,6 +11,9 @@ import pandas as pd
 from xgboost import XGBClassifier
 from sklearn.model_selection import train_test_split
 from sklearn.metrics import classification_report, accuracy_score
+import shap
+import matplotlib.pylab as pl
+
 
 def load_and_prepare_data(file_name):
     """Load data from a CSV file and prepare it for modeling."""
@@ -29,7 +32,7 @@ def train_and_evaluate(X, y):
     accuracy = accuracy_score(y_test, y_pred)
     report = classification_report(y_test, y_pred, output_dict=True, zero_division=0)
     feature_importances = model.feature_importances_
-    return accuracy, report, feature_importances
+    return accuracy, report, feature_importances, model
 
 def summarize_results(i, accuracy, report):
     """Summarize results for output, capturing metrics for both class 0 and class 1."""
@@ -61,17 +64,24 @@ def collect_feature_importances(X_columns, feature_importances, cluster_id):
     return feature_importance_dict
 
 if __name__ == '__main__':
+
     summary_results = []
     all_feature_importances = []
     for i in range(20):  # Loop from 0_data.csv to 19_data.csv
         file_name = f'clusters csv\\{i}_data.csv'
         X, y = load_and_prepare_data(file_name)
-        accuracy, report, feature_importances = train_and_evaluate(X, y)
+        accuracy, report, feature_importances, model = train_and_evaluate(X, y)
         result = summarize_results(i, accuracy, report)
         summary_results.append(result)
         # Collect feature importances into a single dictionary for each cluster
         feature_importance_dict = collect_feature_importances(X.columns, feature_importances, i)
         all_feature_importances.append(feature_importance_dict)
+
+        # SHAP portion, works visually at shap_analysis.ipynb
+        # explainer = shap.TreeExplainer(model)
+        # shap_values = explainer.shap_values(X)
+        # shap.force_plot(explainer.expected_value, shap_values[0, :], X.columns)
+
 
     # Save all results to a single summary CSV file
     results_df = pd.DataFrame(summary_results)
