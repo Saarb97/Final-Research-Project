@@ -342,6 +342,44 @@ def run_icalingam(data):
     indices = np.argwhere(feature_importance != 0).flatten()
     return indices
 
+def run_icalingam_v2(data):
+    print('Starting ICALiNGAM')
+    df_selection = data.drop(columns=['text', 'performance'])
+    columns = range(len(df_selection.columns))
+    feature_importance = []
+    for i in range((len(columns) // 100) + 1):
+        model = lingam.ICALiNGAM(42, 3000)
+        until = min(len(columns), (1 + (i + 1) * 100))
+        model.fit(df_selection.iloc[:, [columns[0]] + list(columns[(1 + i * 100):until])])
+        if len(feature_importance) != 0:
+            feature_importance = np.concatenate((feature_importance, model.adjacency_matrix_[0][1:]), axis=0)
+        else:
+            feature_importance = model.adjacency_matrix_[0][1:]
+    feature_importance = np.concatenate(([0], feature_importance), axis=0)
+    indices = np.argwhere(feature_importance != 0).flatten()
+
+    new_indices = []
+    for indice in indices:
+        feature_importance = []
+        for i in range((len(columns) // 100) + 1):
+            model = lingam.ICALiNGAM(2, 10)
+            untill = min(len(columns), (1 + (i + 1) * 100))
+            elem_list = list(columns[(1 + i * 100):untill])
+            if indice in elem_list: elem_list.remove(indice)
+
+            ling = model.fit(df.iloc[:, [columns[indice]] + elem_list])
+            if len(feature_importance) != 0:
+                feature_importance = np.concatenate((feature_importance, model.adjacency_matrix_[0][1:]), axis=0)
+            else:
+                feature_importance = model.adjacency_matrix_[0][1:]
+        feature_importance = np.concatenate(([0], feature_importance), axis=0)
+        indecies_current = np.argwhere(feature_importance >= 0.2)
+        indecies_current = list(indecies_current.flatten())
+
+        # new_indices = [new_indices + indecies_current]
+        new_indices.extend(indecies_current)
+    new_indices = (list(set(new_indices)))
+    return indices
 
 def cluster_data(data, indices):
     df_for_clustering = data.iloc[:, list(indices)]
