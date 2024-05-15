@@ -227,7 +227,7 @@ def apply_LDA(df):
 
 
 if __name__ == '__main__':
-    FILE_PATH = "all_clustering_10_04.csv"
+    FILE_PATH = "all_clustering_09_05.csv"
     df = pd.read_csv(FILE_PATH)
 
     # Load spaCy's language model
@@ -235,5 +235,6 @@ if __name__ == '__main__':
 
     df = apply_basic_text_features(df)
     df = apply_LDA(df)
-    df.to_csv('full_dataset_feature_extraction_10-04.csv', Index=False)
+    # df.to_csv('full_dataset_feature_extraction_09-05.csv', Index=False)
+    df.to_csv('full_dataset_feature_extraction_09-05.csv')
 

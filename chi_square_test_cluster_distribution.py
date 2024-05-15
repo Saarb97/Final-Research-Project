@@ -2,7 +2,7 @@ import pandas as pd
 from scipy.stats import chi2_contingency
 
 if __name__ == '__main__':
-    FILE_PATH = "full_dataset_feature_extraction_10-04.csv"
+    FILE_PATH = "full_dataset_feature_extraction_09-05.csv"
     df = pd.read_csv(FILE_PATH)
     # Step 1: Count the number of incorrect observations in each cluster
     incorrect_counts = df[df['performance'] == 0].groupby('cluster')['performance'].count()

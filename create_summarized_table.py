@@ -46,7 +46,7 @@ def process_cluster(group, passed_prompts):
 
 
 if __name__ == '__main__':
-    FILE_PATH = "full_dataset_feature_extraction_10-04.csv"
+    FILE_PATH = "full_dataset_feature_extraction_09-05.csv"
     data_df = load_data(FILE_PATH)
     cluster_groups = group_data_by_cluster(data_df)
     passed_prompts = get_passed_prompts(data_df)

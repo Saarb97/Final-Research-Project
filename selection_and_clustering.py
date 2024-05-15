@@ -342,6 +342,7 @@ def run_icalingam(data):
     indices = np.argwhere(feature_importance != 0).flatten()
     return indices
 
+
 def run_icalingam_v2(data):
     print('Starting ICALiNGAM')
     df_selection = data.drop(columns=['text', 'performance'])
@@ -360,14 +361,16 @@ def run_icalingam_v2(data):
 
     new_indices = []
     for indice in indices:
+        print(f'calculating index: {indice} out of {len(indices)}')
         feature_importance = []
         for i in range((len(columns) // 100) + 1):
-            model = lingam.ICALiNGAM(2, 10)
+            model = lingam.ICALiNGAM(22, 1000)
             untill = min(len(columns), (1 + (i + 1) * 100))
             elem_list = list(columns[(1 + i * 100):untill])
-            if indice in elem_list: elem_list.remove(indice)
+            if indice in elem_list:
+                elem_list.remove(indice)
 
-            ling = model.fit(df.iloc[:, [columns[indice]] + elem_list])
+            model.fit(df.iloc[:, [columns[indice]] + elem_list])
             if len(feature_importance) != 0:
                 feature_importance = np.concatenate((feature_importance, model.adjacency_matrix_[0][1:]), axis=0)
             else:
@@ -379,7 +382,7 @@ def run_icalingam_v2(data):
         # new_indices = [new_indices + indecies_current]
         new_indices.extend(indecies_current)
     new_indices = (list(set(new_indices)))
-    return indices
+    return new_indices
 
 def cluster_data(data, indices):
     df_for_clustering = data.iloc[:, list(indices)]
@@ -394,13 +397,13 @@ def save_data(data, file_name):
 if __name__ == '__main__':
     FILE_PATH = "fairness_bbq_dataset_with_embeddings.csv"
     df = read_data(FILE_PATH)
-    indices = run_icalingam(df)
-    print(len(indices))
-    # predictions = cluster_data(df, indices)
-    #
-    # post_selection_df = df[['text', 'performance']]
-    # post_selection_df['cluster'] = predictions
-    # cluster_col = post_selection_df.pop('cluster')
-    # post_selection_df.insert(2, 'cluster', cluster_col)
-    #
-    # save_data(post_selection_df, 'all_clustering_10_04.csv')
+    # indices = run_icalingam(df)
+    indices = run_icalingam_v2(df)
+    predictions = cluster_data(df, indices)
+
+    post_selection_df = df[['text', 'performance']]
+    post_selection_df['cluster'] = predictions
+    cluster_col = post_selection_df.pop('cluster')
+    post_selection_df.insert(2, 'cluster', cluster_col)
+
+    save_data(post_selection_df, 'all_clustering_09_05.csv')
