@@ -44,6 +44,27 @@ def process_cluster(group, passed_prompts):
     cluster_df = cluster_df.assign(u_stat=u_stats, p_val=p_vals)
     return cluster_df
 
+def dataframe_to_string(df):
+    # Convert DataFrame to a string in the desired format
+    df_string = f"pd.DataFrame({{{', '.join([f'{col}: {df[col].tolist()}' for col in df.columns])}}}, index={df.index.tolist()})"
+    return df_string
+
+def create_cluster_summary_csv(cluster_groups, output_file):
+    cluster_summary = []
+
+    for cluster, group_df in cluster_groups:
+        # Select only the "text" column and reset index for line numbers
+        cluster_text_df = group_df[['text']].reset_index()
+        # Convert the DataFrame to a string representation
+        cluster_text_str = dataframe_to_string(cluster_text_df)
+        # Append cluster number and DataFrame string to the summary list
+        cluster_summary.append([cluster, cluster_text_str])
+
+    # Create a summary DataFrame
+    summary_df = pd.DataFrame(cluster_summary, columns=['cluster', 'dataframe'])
+    # Write the summary DataFrame to a CSV file
+    summary_df.to_csv(output_file, index=False)
+
 
 if __name__ == '__main__':
     FILE_PATH = "full_dataset_feature_extraction_09-05.csv"
@@ -61,3 +82,5 @@ if __name__ == '__main__':
 
     for cluster, df in cluster_dfs.items():
         df.to_csv(f'clusters csv\\{cluster}_statistics.csv')
+
+    create_cluster_summary_csv(cluster_groups, "clusters_df_objects.csv")

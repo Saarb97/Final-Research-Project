@@ -142,50 +142,6 @@ def train_with_smote_kfold(X, y):
     return (avg_accuracy, avg_roc_auc_0, avg_roc_auc_1, reports, avg_feature_importances,
             avg_pr_auc_0, avg_pr_auc_1, avg_global_pr_auc, avg_global_roc_auc)
 
-def train_with_smote(X, y):
-    # Splitting the dataset into training and testing sets
-    X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
-
-    param_test = {
-        'max_depth': [3, 5, 7, 10],
-        'min_child_weight': [1, 3, 5],
-        'gamma': [0, 0.1, 0.2, 0.3],
-        'subsample': [0, 0.7, 0.8, 0.9],
-        'colsample_bytree': [0, 0.7, 0.8, 0.9]
-    }
-
-    # Create a custom scorer. The roc_auc_score will compute the score for class '0' as the positive class
-    # minority_auc_scorer = make_scorer(roc_auc_score_minority, response_method="predict_proba")
-
-    #gsearch = GridSearchCV(estimator=XGBClassifier(learning_rate=0.1, n_estimators=100, objective='binary:logistic',
-    #                                               use_label_encoder=False, eval_metric='logloss'),
-    #                       param_grid=param_test, scoring=minority_auc_scorer, n_jobs=-1, cv=5)
-
-
-    # Applying SMOTE
-    smote = SMOTE(random_state=42)
-    X_train_smote, y_train_smote = smote.fit_resample(X_train, y_train)
-
-    #gsearch.fit(X_train_smote, y_train_smote)
-    #print(gsearch.best_params_, gsearch.best_score_)
-
-    # Train XGBoost classifier using the best params found in GridSearchCV
-    #model = XGBClassifier(use_label_encoder=False, eval_metric='logloss', **gsearch.best_params_)
-    model = XGBClassifier(use_label_encoder=False, eval_metric='logloss')
-    model.fit(X_train_smote, y_train_smote)
-
-    # Predictions and Evaluation
-    y_pred = model.predict(X_test)
-    y_proba = model.predict_proba(X_test)
-    accuracy = accuracy_score(y_test, y_pred)
-    report = classification_report(y_test, y_pred, output_dict=True, zero_division=0)
-    feature_importances = model.feature_importances_
-
-    roc_auc_0 = roc_auc_score(y_test == 0, y_proba[:, 0])  # ROC AUC for class 0
-    roc_auc_1 = roc_auc_score(y_test == 1, y_proba[:, 1])  # ROC AUC for class 1
-    return accuracy, report, feature_importances, model, roc_auc_0, roc_auc_1
-
-
 def summarize_results(i, accuracy, report, roc_auc_0, roc_auc_1):
     """Summarize results for output, capturing metrics for both class 0 and class 1."""
     # Extract metrics for each class from the classification report
@@ -235,13 +191,11 @@ def summarize_results_kfold(i, avg_accuracy, avg_roc_auc_0, avg_roc_auc_1,
         'average_global_roc_auc': global_roc_auc,
         'precision_0': avg_metrics_0['precision'],
         'recall_0': avg_metrics_0['recall'],
-        'roc_auc_0': avg_roc_auc_0,
         'pr_auc_0': avg_pr_auc_0,
         'f1-score_0': avg_metrics_0['f1-score'],
         'support_0': avg_metrics_0['support'],
         'precision_1': avg_metrics_1['precision'],
         'recall_1': avg_metrics_1['recall'],
-        'roc_auc_1': avg_roc_auc_1,
         'pr_auc_1': avg_pr_auc_1,
         'f1-score_1': avg_metrics_1['f1-score'],
         'support_1': avg_metrics_1['support']
@@ -294,11 +248,6 @@ def main_kfold():
         elapsed = end - start
         print(f'time elapsed for cluster {i}: {elapsed}')
 
-        # SHAP portion, works visually at analysis_notebook.ipynb
-        # explainer = shap.TreeExplainer(model)
-        # shap_values = explainer.shap_values(X)
-        # shap.force_plot(explainer.expected_value, shap_values[0, :], X.columns)
-
     # Save all results to a single summary CSV file
     results_df = pd.DataFrame(summary_results)
     results_df.to_csv('XGBoost_summary_results.csv', index=False)
@@ -309,30 +258,3 @@ def main_kfold():
 
 if __name__ == '__main__':
     main_kfold()
-
-    # summary_results = []
-    # all_feature_importances = []
-    # for i in range(20):  # Loop from 0_data.csv to 19_data.csv
-    #     file_name = f'clusters csv\\{i}_data.csv'
-    #     X, y = load_and_prepare_data(file_name)
-    #     # accuracy, report, feature_importances, model, roc_auc_0, roc_auc_1 = train_and_evaluate(X, y)
-    #     accuracy, report, feature_importances, model, roc_auc_0, roc_auc_1 = train_with_smote(X, y)
-    #     result = summarize_results(i, accuracy, report, roc_auc_0, roc_auc_1)
-    #     summary_results.append(result)
-    #     # Collect feature importances into a single dictionary for each cluster
-    #     feature_importance_dict = collect_feature_importances(X.columns, feature_importances, i)
-    #     all_feature_importances.append(feature_importance_dict)
-    #
-    #     # SHAP portion, works visually at analysis_notebook.ipynb
-    #     # explainer = shap.TreeExplainer(model)
-    #     # shap_values = explainer.shap_values(X)
-    #     # shap.force_plot(explainer.expected_value, shap_values[0, :], X.columns)
-    #
-    #
-    # # Save all results to a single summary CSV file
-    # results_df = pd.DataFrame(summary_results)
-    # results_df.to_csv('XGBoost_summary_results.csv', index=False)
-    #
-    # # Combine all feature importance dictionaries into a single DataFrame and save to CSV
-    # feature_importances_df = pd.DataFrame(all_feature_importances)
-    # feature_importances_df.to_csv('XGBoost_feature_importances.csv', index=False)
