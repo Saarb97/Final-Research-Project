@@ -14,18 +14,6 @@ import nltk
 nltk.download('punkt')
 
 
-def load_csv(path):
-    try:
-        df = pd.read_csv(path)
-        print(df.head())
-        df = df[['id', 'text', 'cluster']]
-        return df
-    except FileNotFoundError as e:
-        print(str(e))
-    except Exception as e:
-        print(str(e))
-
-
 def calculate_sentiment(text):
     blob = TextBlob(text)
     return blob.sentiment.polarity, blob.sentiment.subjectivity
@@ -202,7 +190,6 @@ def apply_basic_text_features(df):
     df['average_sentence_length'] = df['text'].apply(average_sentence_length)
     df['stop_words_count'] = df['text'].apply(stop_words_count)
     df['punctuation_diversity'] = df['text'].apply(punctuation_diversity)
-    df['named_entities'] = df['text'].apply(lambda x: extract_entities(x))
     # Adding 35 more features from readability package
     metrics_df = pd.DataFrame(df['text'].apply(analyze_text_readability).tolist())
     df = df.join(metrics_df)
@@ -230,7 +217,7 @@ if __name__ == '__main__':
     FILE_PATH = "all_clustering_09_05.csv"
     df = pd.read_csv(FILE_PATH)
 
-    # Load spaCy's language model
+    # Load spaCy's language model 
     nlp = spacy.load("en_core_web_sm")
 
     df = apply_basic_text_features(df)
