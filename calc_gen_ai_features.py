@@ -1,4 +1,5 @@
 import pandas as pd
+import numpy as np
 from sentence_transformers import SentenceTransformer, util
 
 
@@ -47,14 +48,65 @@ def process_file(file_index, ai_features):
     #result_df.to_csv(file_name, index=False)
 
 
+def compute_dimension_wise_cosine_similarity(text_embedding, concept_embeddings):
+    """Compute the best dimension-wise cosine similarity for a text embedding and each concept embedding."""
+    best_similarities = []
+    text_embedding = text_embedding.squeeze()
+    concept_embeddings = concept_embeddings.squeeze()
+
+    for concept_embedding in concept_embeddings:
+        # Calculate cosine similarity for each dimension
+        similarities = [
+            (text_embedding[i] * concept_embedding[i]) /
+            (np.linalg.norm(text_embedding[i]) * np.linalg.norm(concept_embedding[i]))
+            for i in range(len(text_embedding))
+        ]
+        # Take the highest similarity score
+        best_similarity = max(similarities)
+        best_similarities.append(best_similarity)
+
+    return best_similarities
+
+def compute_best_scores_dimension_wise(text_embeddings, concept_embeddings, ai_features):
+    """Compute the best scores for each concept word for each text using dimension-wise cosine similarity."""
+    best_scores = []
+    for text_embedding in text_embeddings:
+        best_similarities = compute_dimension_wise_cosine_similarity(text_embedding, concept_embeddings)
+        best_score = {ai_features[i]: best_similarities[i] for i in range(len(ai_features))}
+        best_scores.append(best_score)
+    return best_scores
+
+def process_file_dimension_wise(file_index, ai_features):
+    """Process a single file, compute scores using dimension-wise cosine similarity, and concatenate results."""
+    file_name = f'clusters csv/{file_index}_data.csv'
+    data = pd.read_csv(file_name)
+    cluster_text = data['text']
+
+    # Encode concept words and text data
+    ai_features_embeddings = encode_text(ai_features)
+    text_embeddings = encode_text(cluster_text.tolist())
+
+    # Compute the best scores using the new method
+    scores_list = compute_best_scores_dimension_wise(text_embeddings, ai_features_embeddings, ai_features)
+
+    # Convert the list of scores to a DataFrame
+    scores_df = pd.DataFrame(scores_list)
+    print(scores_df)
+    # Combine the scores with the original dataframe
+    result_df = pd.concat([data, scores_df], axis=1)
+
+    # Save the result back to the original CSV file
+    #result_df.to_csv(file_name, index=False)
+
 
 if __name__ == '__main__':
     clustered_ai_features = pd.read_csv('clustered_ai_features.csv')
     cols = clustered_ai_features.columns.tolist()
 
-    for i in range(1):
+    for i in range(20):
         cluster_index = str(i)
         if cluster_index in cols:
             ai_features = clustered_ai_features[f'{i}'].dropna().tolist()
-            process_file(i, ai_features)
+            #process_file(i, ai_features)
+            process_file_dimension_wise(i, ai_features)
             print(f"Processing complete for file {i}_data.csv")
