@@ -21,7 +21,10 @@ import time
 def load_and_prepare_data(file_name):
     """Load data from a CSV file and prepare it for modeling."""
     data = pd.read_csv(file_name)
-    data.drop(columns=['text', 'cluster', 'named_entities'], inplace=True)  # Drop non-numeric or unnecessary columns
+    try:
+        data.drop(columns=['text', 'cluster', 'named_entities'], inplace=True)  # Drop non-numeric or unnecessary columns
+    except KeyError:
+        data.drop(columns=['text', 'cluster'], inplace=True)
     X = data.drop(columns=['performance'])
     y = data['performance']
     return X, y
