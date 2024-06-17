@@ -2,10 +2,13 @@ import pandas as pd
 import numpy as np
 import matplotlib.pyplot as plt
 from xgboost import XGBClassifier
+from sklearn.ensemble import RandomForestClassifier
 from sklearn.model_selection import train_test_split, StratifiedKFold, cross_val_predict
 from sklearn.metrics import classification_report, accuracy_score, average_precision_score
 from sklearn.preprocessing import LabelEncoder
-
+from collections import Counter
+import matplotlib.pyplot as plt
+import seaborn as sns
 import pandas as pd
 from xgboost import XGBClassifier
 from sklearn.model_selection import train_test_split
@@ -17,6 +20,8 @@ from sklearn.model_selection import GridSearchCV
 import shap
 import matplotlib.pylab as pl
 import time
+from imblearn.combine import SMOTETomek
+from imblearn.under_sampling import TomekLinks
 
 def load_and_prepare_data(file_name):
     """Load data from a CSV file and prepare it for modeling."""
@@ -43,8 +48,28 @@ def train_and_evaluate(X, y):
     roc_auc_1 = roc_auc_score(y_test == 1, y_proba[:, 1])  # ROC AUC for class
     return accuracy, report, feature_importances, model, roc_auc_0, roc_auc_1
 
+
+def train_xgboost_with_SMOTE(X_train, y_train):
+    # Adjust the number of neighbors based on the minority class size in the training set
+    minority_class_size = min(sum(y_train == 0), sum(y_train == 1))
+    n_neighbors = min(minority_class_size - 1, 5)  # at least one or up to 5 neighbors
+    if n_neighbors < 1:  # Not enough samples to apply SMOTE
+        print("Not enough minority class samples to apply SMOTE. Continuing without SMOTE.")
+        X_train_smote, y_train_smote = X_train, y_train
+    else:
+        # smote = SMOTE(random_state=42, k_neighbors=n_neighbors)
+        smote = SMOTETomek(smote=SMOTE(random_state=42, k_neighbors=n_neighbors),
+                           tomek=TomekLinks(sampling_strategy='majority'))
+        X_train_smote, y_train_smote = smote.fit_resample(X_train, y_train)
+
+    model = XGBClassifier(use_label_encoder=False, eval_metric='logloss')
+    # model = RandomForestClassifier(n_estimators=10000, n_jobs=-1, random_state=42)
+    model.fit(X_train_smote, y_train_smote)
+    return model
+
+
 def train_with_smote_kfold(X, y):
-    kf = StratifiedKFold(n_splits=10, shuffle=True, random_state=42)
+    kf = StratifiedKFold(n_splits=5, shuffle=True, random_state=42)
     accuracies = []
     global_pr_aucs = []
     global_roc_aucs = []
@@ -60,6 +85,10 @@ def train_with_smote_kfold(X, y):
         X_train, X_test = X.iloc[train_index], X.iloc[test_index]
         y_train, y_test = y.iloc[train_index], y.iloc[test_index]
 
+        '''
+        Using grid search to optimize the hyperparameters of the XGBoost classifier.
+        Takes long to run without meaningful performance increase.
+        
         param_test = {
             'max_depth': [3, 5, 7, 10],
             'min_child_weight': [1, 3, 5],
@@ -67,37 +96,21 @@ def train_with_smote_kfold(X, y):
             'subsample': [0, 0.7, 0.8, 0.9],
             'colsample_bytree': [0, 0.7, 0.8, 0.9]
         }
+        #Create a custom scorer. The roc_auc_score will compute the score for class '0' as the positive class
+        minority_auc_scorer = make_scorer(roc_auc_score_minority, response_method="predict_proba")
 
-        # Applying SMOTE
-        # smote = SMOTE(random_state=42)
-        # X_train_smote, y_train_smote = smote.fit_resample(X_train, y_train)
+        gsearch = GridSearchCV(estimator=XGBClassifier(learning_rate=0.1, n_estimators=100, objective='binary:logistic',
+                                                       use_label_encoder=False, eval_metric='logloss'),
+                               param_grid=param_test, scoring=minority_auc_scorer, n_jobs=-1, cv=2)
 
-        # Adjust the number of neighbors based on the minority class size in the training set
-        minority_class_size = min(sum(y_train == 0), sum(y_train == 1))
-        n_neighbors = min(minority_class_size - 1, 5)  # at least one or up to 5 neighbors
+        gsearch.fit(X_train_smote, y_train_smote)
+        print(gsearch.best_params_, gsearch.best_score_)
 
-        if n_neighbors < 1:  # Not enough samples to apply SMOTE
-            print("Not enough minority class samples to apply SMOTE. Continuing without SMOTE.")
-            X_train_smote, y_train_smote = X_train, y_train
-        else:
-            smote = SMOTE(random_state=42, k_neighbors=n_neighbors)
-            X_train_smote, y_train_smote = smote.fit_resample(X_train, y_train)
+        #Train XGBoost classifier using the best params found in GridSearchCV
+        model = XGBClassifier(use_label_encoder=False, eval_metric='logloss',**gsearch.best_params_)
+        '''
 
-
-        # Create a custom scorer. The roc_auc_score will compute the score for class '0' as the positive class
-        # minority_auc_scorer = make_scorer(roc_auc_score_minority, response_method="predict_proba")
-        #
-        # gsearch = GridSearchCV(estimator=XGBClassifier(learning_rate=0.1, n_estimators=100, objective='binary:logistic',
-        #                                                use_label_encoder=False, eval_metric='logloss'),
-        #                        param_grid=param_test, scoring=minority_auc_scorer, n_jobs=-1, cv=2)
-        #
-        # gsearch.fit(X_train_smote, y_train_smote)
-        # print(gsearch.best_params_, gsearch.best_score_)
-
-        # Train XGBoost classifier using the best params found in GridSearchCV
-        # model = XGBClassifier(use_label_encoder=False, eval_metric='logloss',**gsearch.best_params_)
-        model = XGBClassifier(use_label_encoder=False, eval_metric='logloss')
-        model.fit(X_train_smote, y_train_smote)
+        model = train_xgboost_with_SMOTE(X_train, y_train)
 
         # Predictions and Evaluation
         y_pred = model.predict(X_test)
@@ -253,11 +266,11 @@ def main_kfold():
 
     # Save all results to a single summary CSV file
     results_df = pd.DataFrame(summary_results)
-    results_df.to_csv('XGBoost_summary_results.csv', index=False)
+    results_df.to_csv('XGBoost\\XGBoost_summary_results.csv', index=False)
 
     # Combine all feature importance dictionaries into a single DataFrame and save to CSV
     feature_importances_df = pd.DataFrame(all_feature_importances)
-    feature_importances_df.to_csv('XGBoost_feature_importances.csv', index=False)
+    feature_importances_df.to_csv('XGBoost\\XGBoost_feature_importances.csv', index=False)
 
 if __name__ == '__main__':
     main_kfold()

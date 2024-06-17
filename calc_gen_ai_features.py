@@ -153,7 +153,7 @@ def process_file_with_classification(file_index, ai_features):
         print(f'Processing {count+1}/{len(cluster_text)}')
         start = time.time()
         probabilities = compute_probabilities(text, ai_features)
-        print(f'probabilities: {probabilities}')
+        # print(f'probabilities: {probabilities}')
         scores_list.append(probabilities)
         end = time.time()
         elapsed = end - start
@@ -206,19 +206,19 @@ if __name__ == '__main__':
     clustered_ai_features = pd.read_csv('clustered_ai_features.csv')
     cols = clustered_ai_features.columns.tolist()
 
-    # for i in range(20):
-    #     cluster_index = str(i)
-    #     if cluster_index in cols:
-    #         ai_features = clustered_ai_features[f'{i}'].dropna().tolist()
-    #         #process_file(i, ai_features)
-    #         #process_file_dimension_wise(i, ai_features)
-    #         process_file_with_classification(i, ai_features)
-    #         print(f"Processing complete for file {i}_data.csv")
-    i = 8
-    cluster_index = str(i)
-    if cluster_index in cols:
-        ai_features = clustered_ai_features[f'{i}'].dropna().tolist()
-        #process_file(i, ai_features)
-        #process_file_dimension_wise(i, ai_features)
-        process_file_with_classification(i, ai_features)
-        print(f"Processing complete for file {i}_data.csv")
+    for i in range(20):
+        cluster_index = str(i)
+        if cluster_index in cols:
+            ai_features = clustered_ai_features[f'{i}'].dropna().tolist()
+            #process_file(i, ai_features)
+            #process_file_dimension_wise(i, ai_features)
+            process_file_with_classification(i, ai_features)
+            print(f"Processing complete for file {i}_data.csv")
+    # i = 8
+    # cluster_index = str(i)
+    # if cluster_index in cols:
+    #     ai_features = clustered_ai_features[f'{i}'].dropna().tolist()
+    #     #process_file(i, ai_features)
+    #     #process_file_dimension_wise(i, ai_features)
+    #     process_file_with_classification(i, ai_features)
+    #     print(f"Processing complete for file {i}_data.csv")

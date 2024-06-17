@@ -67,16 +67,16 @@ def create_cluster_summary_csv(cluster_groups, output_file):
 
 
 if __name__ == '__main__':
-    #FILE_PATH = "full_dataset_feature_extraction_09-05.csv"
-    FILE_PATH = f'clusters csv\\8_data.csv'
+    FILE_PATH = "full_dataset_feature_extraction_09-05.csv"
+    #FILE_PATH = f'clusters csv\\8_data.csv'
     data_df = load_data(FILE_PATH)
     cluster_groups = group_data_by_cluster(data_df)
     passed_prompts = get_passed_prompts(data_df)
     cluster_dfs = {}
 
     # Split the original dataset into individual CSV files by clusters
-    # for cluster, group in cluster_groups:
-    #     group.to_csv(f'clusters csv\\{cluster}_data.csv', index=False)
+    for cluster, group in cluster_groups:
+        group.to_csv(f'clusters csv\\{cluster}_data.csv', index=False)
 
     for cluster, group in cluster_groups:
         cluster_dfs[cluster] = process_cluster(group, passed_prompts)
