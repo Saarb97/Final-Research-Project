@@ -2,9 +2,13 @@ import pandas as pd
 import numpy as np
 from sentence_transformers import SentenceTransformer, util
 from transformers import pipeline
-from transformers import AutoModelForSequenceClassification, AutoTokenizer
+from transformers import AutoModelForSequenceClassification, AutoTokenizer, BitsAndBytesConfig
 import time
 import torch
+
+
+device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
+print(f'Using device: {device}')
 
 # Load SBERT model
 #model = SentenceTransformer('all-mpnet-base-v2')
@@ -12,11 +16,26 @@ import torch
 classifier = pipeline("zero-shot-classification", model="MoritzLaurer/deberta-v3-large-zeroshot-v2.0")
 
 # Local bert
-device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
-print(f'Using device: {device}')
 #nli_model = AutoModelForSequenceClassification.from_pretrained('facebook/bart-large-mnli')
-nli_model = AutoModelForSequenceClassification.from_pretrained("MoritzLaurer/deberta-v3-large-zeroshot-v2.0")
+#nli_model = AutoModelForSequenceClassification.from_pretrained("MoritzLaurer/deberta-v3-large-zeroshot-v2.0")
+
+bnb_config = BitsAndBytesConfig(
+    load_in_4bit=True,
+    bnb_4bit_quant_type="nf4",
+    bnb_4bit_compute_dtype=torch.float16,
+)
+
+#torch.backends.cuda.matmul.allow_tf32 = True
+
+
+nli_model = AutoModelForSequenceClassification.from_pretrained(
+    "MoritzLaurer/deberta-v3-large-zeroshot-v2.0",
+    #quantization_config=bnb_config,
+    # torch_dtype=torch.float16,
+)
+
 nli_model.to(device)
+
 #tokenizer = AutoTokenizer.from_pretrained('facebook/bart-large-mnli')
 tokenizer = AutoTokenizer.from_pretrained("MoritzLaurer/deberta-v3-large-zeroshot-v2.0")
 
@@ -167,7 +186,7 @@ def process_file_with_classification(file_index, ai_features):
     result_df = pd.concat([data, scores_df], axis=1)
     print(f'results: {result_df.head}')
     # Save the result back to the original CSV file
-    result_df.to_csv(file_name, index=False)
+    # result_df.to_csv(file_name, index=False)
 
 
 def compute_probabilities(sentence, hypotheses):
@@ -214,11 +233,3 @@ if __name__ == '__main__':
             #process_file_dimension_wise(i, ai_features)
             process_file_with_classification(i, ai_features)
             print(f"Processing complete for file {i}_data.csv")
-    # i = 8
-    # cluster_index = str(i)
-    # if cluster_index in cols:
-    #     ai_features = clustered_ai_features[f'{i}'].dropna().tolist()
-    #     #process_file(i, ai_features)
-    #     #process_file_dimension_wise(i, ai_features)
-    #     process_file_with_classification(i, ai_features)
-    #     print(f"Processing complete for file {i}_data.csv")

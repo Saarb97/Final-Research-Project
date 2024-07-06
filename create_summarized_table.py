@@ -68,20 +68,28 @@ def create_cluster_summary_csv(cluster_groups, output_file):
 
 if __name__ == '__main__':
     FILE_PATH = "full_dataset_feature_extraction_09-05.csv"
-    #FILE_PATH = f'clusters csv\\8_data.csv'
     data_df = load_data(FILE_PATH)
     cluster_groups = group_data_by_cluster(data_df)
     passed_prompts = get_passed_prompts(data_df)
     cluster_dfs = {}
 
-    # Split the original dataset into individual CSV files by clusters
-    for cluster, group in cluster_groups:
-        group.to_csv(f'clusters csv\\{cluster}_data.csv', index=False)
+    split_clusters = False
+    if split_clusters:
+        for cluster, group in cluster_groups:
+            group.to_csv(f'clusters csv\\{cluster}_data.csv', index=False)
 
-    for cluster, group in cluster_groups:
-        cluster_dfs[cluster] = process_cluster(group, passed_prompts)
+    gen_statistics = False
+    if gen_statistics:
+        for i in range(20):  # Loop from 0_data.csv to 19_data.csv
+            file_name = f'clusters csv\\{i}_data.csv'
+            data_df = load_data(FILE_PATH)
+            cluster_groups = group_data_by_cluster(data_df)
+            passed_prompts = get_passed_prompts(data_df)
+            cluster_dfs = {}
 
-    for cluster, df in cluster_dfs.items():
-        df.to_csv(f'clusters csv\\{cluster}_statistics.csv')
+            for cluster, group in cluster_groups:
+                cluster_dfs[cluster] = process_cluster(group, passed_prompts)
 
-    # create_cluster_summary_csv(cluster_groups, "clusters_df_objects.csv")
+            for cluster, df in cluster_dfs.items():
+                df.to_csv(f'clusters csv\\{cluster}_statistics.csv')
+
