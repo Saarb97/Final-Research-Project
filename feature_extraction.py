@@ -214,6 +214,12 @@ def apply_LDA(df):
 
 
 if __name__ == '__main__':
+    '''
+    TODO: feature value standartization
+          check https://doi.org/10.1145/3613904.3641960
+                https://github.com/HLasse/TextDescriptives
+    
+    '''
     FILE_PATH = "all_clustering_09_05.csv"
     df = pd.read_csv(FILE_PATH)
 

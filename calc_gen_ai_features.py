@@ -178,15 +178,15 @@ def process_file_with_classification(file_index, ai_features):
         elapsed = end - start
         print(f'elapsed time: {elapsed}')
 
-    print(f'score 1: {scores_list[0]}')
+    #print(f'score 1: {scores_list[0]}')
     # Convert the list of scores to a DataFrame
     scores_df = pd.DataFrame(scores_list)
 
     # Combine the scores with the original dataframe
     result_df = pd.concat([data, scores_df], axis=1)
-    print(f'results: {result_df.head}')
+    #print(f'results: {result_df.head}')
     # Save the result back to the original CSV file
-    # result_df.to_csv(file_name, index=False)
+    result_df.to_csv(file_name, index=False)
 
 
 def compute_probabilities(sentence, hypotheses):
@@ -222,7 +222,7 @@ if __name__ == '__main__':
     print(torch.cuda.is_available())
     print(torch.__version__)
     print(torch.cuda.get_device_name(torch.cuda.current_device()))
-    clustered_ai_features = pd.read_csv('clustered_ai_features.csv')
+    clustered_ai_features = pd.read_csv('ai_features2.csv', encoding='ISO-8859-1')
     cols = clustered_ai_features.columns.tolist()
 
     for i in range(20):

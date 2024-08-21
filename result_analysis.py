@@ -42,19 +42,19 @@ def get_shap_feature_importance(data_file_name):
     # Get the corresponding SHAP values for the samples predicted as class 0
     class_0_shap_values = shap_values[class_0_indices]
 
-    # Calculate mean absolute SHAP values for each feature
-    class_0_mean_shap_values = np.mean(class_0_shap_values, axis=0)
+    # Calculate median absolute SHAP values for each feature
+    class_0_median_shap_values = np.median(class_0_shap_values, axis=0)
     shap_importance_df = pd.DataFrame({
         'Feature': X.columns,
-        'SHAP_Importance': class_0_mean_shap_values
+        'SHAP_Importance': class_0_median_shap_values
     }).sort_values(ascending=True, by=['SHAP_Importance'])
 
     return shap_importance_df
 
 def calc_statistical_information(data_df, test_type):
-    # Initialize dictionaries to store the mean values and test results
-    mean_0 = {}
-    mean_1 = {}
+    # Initialize dictionaries to store the median values and test results
+    median_0 = {}
+    median_1 = {}
     t_statistics = {}
     p_values = {}
     significant = {}
@@ -62,9 +62,9 @@ def calc_statistical_information(data_df, test_type):
     # Loop through each column except 'performance'
     for column in data_df.columns:
         if column != 'performance':
-            # Calculate means
-            mean_0[column] = data_df[data_df['performance'] == 0][column].mean()
-            mean_1[column] = data_df[data_df['performance'] == 1][column].mean()
+            # Calculate medians
+            median_0[column] = data_df[data_df['performance'] == 0][column].median()
+            median_1[column] = data_df[data_df['performance'] == 1][column].median()
 
             # Perform test
             group_0 = data_df[data_df['performance'] == 0][column]
@@ -86,15 +86,15 @@ def calc_statistical_information(data_df, test_type):
             p_values[column] = p_val
             significant[column] = p_val < 0.05
 
-    # Create a new DataFrame to store the mean values
-    mean_df = pd.DataFrame([mean_0, mean_1], index=['mean_0', 'mean_1'])
+    # Create a new DataFrame to store the median values
+    median_df = pd.DataFrame([median_0, median_1], index=['median_0', 'median_1'])
 
     # Append test results to the DataFrame
-    mean_df.loc['t_statistic'] = t_statistics
-    mean_df.loc['p_value'] = p_values
-    mean_df.loc['significant'] = significant
+    median_df.loc['t_statistic'] = t_statistics
+    median_df.loc['p_value'] = p_values
+    median_df.loc['significant'] = significant
 
-    return mean_df
+    return median_df
 
 def run_logistic_regression(X, y, num_of_features):
     log_reg = LogisticRegression(max_iter=10000, solver='saga').fit(X, y)
@@ -137,14 +137,14 @@ if __name__ == '__main__':
         statistics_df = pd.read_csv(statistics_file_name)
 
         test_types = ['t-test', 'Mann-Whitney U test']
-        mean_df = calc_statistical_information(data_df, test_types[1])
+        median_df = calc_statistical_information(data_df, test_types[1])
 
         # Display the combined DataFrame
-        #print(mean_df)
-        #mean_df.to_csv(f'clusters csv\\{i}_results_analysis.csv', index=True)
+        #print(median_df)
+        #median_df.to_csv(f'clusters csv\\{i}_results_analysis.csv', index=True)
 
         # Filter the significant features
-        significant_features = mean_df.columns[mean_df.loc['significant'] == 1]
+        significant_features = median_df.columns[median_df.loc['significant'] == 1]
         # print(significant_features)
         # Separate features and target
         X = data_df[significant_features]

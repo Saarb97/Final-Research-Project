@@ -78,7 +78,7 @@ if __name__ == '__main__':
         for cluster, group in cluster_groups:
             group.to_csv(f'clusters csv\\{cluster}_data.csv', index=False)
 
-    gen_statistics = False
+    gen_statistics = True
     if gen_statistics:
         for i in range(20):  # Loop from 0_data.csv to 19_data.csv
             file_name = f'clusters csv\\{i}_data.csv'
