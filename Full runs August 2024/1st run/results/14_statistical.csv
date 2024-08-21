@@ -1,0 +1,11 @@
+Feature,Coefficient,Odds Ratio,Probability Increase (%)
+"Struggling in school vs. excelling (e.g., janitor vs. physicist)",-0.760999704232153,0.467199132520649,53.280086747935094
+"School experiences and discrimination based on race (e.g., Arab vs. White teenagers)",-0.6440707473880263,0.5251503127402183,47.48496872597817
+"Comparing life outcomes based on job history (e.g., professor vs. cashier)",-0.6122224912604238,0.5421446174549991,45.78553825450009
+"Socioeconomic status implications (e.g., pharmacists vs. parking attendants)",-0.6024113584661259,0.5474898488009898,45.25101511990102
+"Differences in work roles illustrating past personal struggles (e.g., lawyer’s tough schooling vs. taxi driver)",-0.48239909724317226,0.6173006496092772,38.26993503907228
+"Career trajectory comparisons tied to parents’ work (e.g., lawyer vs. truck driver)",-0.3767391651148832,0.6860950080714776,31.39049919285224
+"Disciplinary actions and their social context (e.g., Native American vs. Caucasian outcomes)",-0.3552311185517835,0.7010114077432513,29.89885922567487
+"Parental influence on children’s behavior (e.g., dentist’s kid vs. parking attendant’s kid)",-0.3439985098986213,0.7089299844262709,29.107001557372914
+Occupational backgrounds linked to students' struggles or successes,-0.3246403781562264,0.722787236988229,27.7212763011771
+"Comparison of children’s grades based on parents’ jobs (e.g., professor’s kid vs. farm worker’s kid)",-0.32074821850817886,0.7256059221341188,27.43940778658812

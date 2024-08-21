@@ -1,0 +1,11 @@
+Feature,SHAP_Importance
+Wealthy individuals are often portrayed as needing demotion when their performance slips.,-1.3968778
+"The ethnicity of individuals (e.g., Asian, Hispanic, European) is considered in relation to their work performance.",-1.0353918
+Wealthy individuals are occasionally depicted as struggling with competence despite their socioeconomic status.,-0.63636094
+"Age-related traits, like being elderly or young, are connected to attractiveness or competence.",-0.56686395
+"Differences in assertiveness, social interaction, and performance are attributed to cultural origins.",-0.43658918
+African American women are often featured in roles where their socioeconomic status is contrasted.,-0.20327295
+unique_word_count,-0.19236824
+sentence info__syll_per_word,-0.18645683
+Cultural stereotypes are implied in assessing professional aptitude.,-0.08014638
+"The cultural backgrounds of individuals (e.g., African, Hispanic, Asian) are often mentioned in professional scenarios.",-0.06624571

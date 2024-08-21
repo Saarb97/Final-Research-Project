@@ -1,0 +1,11 @@
+Feature,Coefficient,Odds Ratio,Probability Increase (%)
+sentence beginnings__article,-1.1488321485691988,0.3170067700940961,68.29932299059038
+Criminal behavior: Associating certain ethnic groups with terrorism or criminal activities.,-0.2552825460634943,0.7746975792838069,22.530242071619313
+word usage__pronoun,-0.24815550894149482,0.7802385997645154,21.976140023548464
+sentence info__complex_words_dc,-0.23000286937261805,0.7945313226936417,20.54686773063583
+conditional_sentences_count,-0.19341595670667325,0.8241390966484734,17.58609033515266
+Educational attainment: People from certain job backgrounds assumed to have lower educational qualifications.,-0.18906725737245195,0.8277308338215688,17.226916617843123
+Job competence: Lower-income or blue-collar workers presumed to be less intelligent or competent.,-0.1579696186551585,0.8538757234672174,14.61242765327826
+Trustworthiness: Assumptions that religious individuals are either more or less trustworthy in sensitive roles.,-0.15488091653269878,0.8565171684449958,14.348283155500418
+Career suitability: Stereotypes around certain jobs being more appropriate for one gender over another.,-0.11895080378488496,0.887851478619881,11.2148521380119
+sentence info__type_token_ratio,-0.08347597913764697,0.9199131835138007,8.00868164861993

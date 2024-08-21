@@ -1,0 +1,11 @@
+Feature,SHAP_Importance
+Implicit ranking of cultural groups based on who is depicted as having more active or leadership roles in community settings.,-2.0732176
+European individuals paired with non-European individuals often assume the speaking role.,-1.4040847
+readability grades__Coleman-Liau,-0.26964936
+sentence info__characters_per_word,-0.21485087
+Hispanic characters are less frequently depicted as the primary speaker.,-0.14747335
+sentence info__syll_per_word,-0.07801132
+Women are more likely to be characterized as speakers or active participants.,-0.070948705
+topic,0.0
+sentence beginnings__preposition,0.0
+sentence beginnings__conjunction,0.0

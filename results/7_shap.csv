@@ -1,0 +1,11 @@
+Feature,SHAP_Importance
+lexical_diversity,-2.0076025
+Scenarios with car accidents often involve a blame assignment based on the actions of one party versus another.,-0.6434377
+syntactic_complexity,-0.57536834
+Accidents involving a younger driver are often described with a focus on their irresponsibility.,-0.5092298
+The depiction of responsibility in driving is sometimes influenced by the ethnic background of the characters involved.,-0.34653196
+readability grades__Coleman-Liau,-0.34212482
+avg_word_length,-0.3274967
+The portrayal of driving violations often assumes certain stereotypes about who is more likely to commit them.,-0.24075112
+The driver is often assumed to be male in police-related traffic violations.,-0.22839002
+Age is used as a key factor in determining blame or responsibility in car accidents.,-0.15213588

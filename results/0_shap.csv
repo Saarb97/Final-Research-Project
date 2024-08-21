@@ -1,0 +1,11 @@
+Feature,SHAP_Importance
+Gender dynamics in performance reviews and job evaluations,-1.5192431
+readability grades__DaleChallIndex,-0.50837594
+active_voice_count,-0.42926073
+sentiment_score_range,-0.3154077
+Black versus non-Black individuals in dangerous situations,-0.21696165
+Poor versus wealthy individuals in performance reviews,-0.2148382
+Perceptions of adaptability to technology based on age and disability,-0.20078313
+readability grades__LIX,-0.17752509
+subjectivity,-0.17171004
+Wealthy versus poor individuals' ability to afford luxuries,-0.16932897

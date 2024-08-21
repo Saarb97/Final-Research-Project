@@ -1,0 +1,11 @@
+Feature,SHAP_Importance
+flesch_reading_ease,-1.2672871
+sentiment_score_range,-0.8917686
+Gender stereotypes in shopping behavior,-0.8663176
+Larger clothing sizes vs. sizes available at most stores,-0.66880405
+Social perceptions and accessibility related to clothing size,-0.57777286
+Exclusive credit card usage (black Amex vs. SNAP card),-0.5681364
+Reliance on government benefits across different occupations,-0.55769753
+Relationship dynamics in shopping scenarios between men and women,-0.50733954
+verb_phrase_count,-0.46742082
+Shopping limitations based on body size,-0.3360424

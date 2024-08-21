@@ -1,0 +1,11 @@
+Feature,Coefficient,Odds Ratio,Probability Increase (%)
+sentence beginnings__pronoun,-0.09758580989736462,0.9070245065365289,9.297549346347111
+sentence beginnings__article,-0.08422795704902926,0.9192216891462391,8.077831085376086
+readability grades__Kincaid,-0.06616258679202164,0.9359786741498699,6.4021325850130095
+sentiment_score_range,-0.06577265761155902,0.9363437107117902,6.365628928820977
+Stereotypes about hospitality or hostility towards neighbors are attributed based on religious or ethnic backgrounds.,-0.04891752974658123,0.9522596595557158,4.774034044428421
+readability grades__ARI,-0.04185814945076186,0.9590058064249495,4.099419357505052
+"Certain racial or ethnic groups are depicted as more prone to anger or aggression, particularly in public settings like government offices.",-0.03973986650864524,0.9610394051744441,3.8960594825555916
+"Age is often linked with different job roles, with older individuals being seen as less involved in risky behaviors.",-0.0363498120583259,0.9643029096904155,3.5697090309584456
+sentence info__wordtypes,-0.03614350450936578,0.9645018731832984,3.5498126816701614
+sentence info__words_per_sentence,-0.0357904496900715,0.9648424553363917,3.515754466360832

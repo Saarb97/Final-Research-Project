@@ -1,0 +1,11 @@
+Feature,SHAP_Importance
+named_entity_count,-0.55581796
+Clarity and intelligence: Assumptions about communication skills are frequently associated with professional roles or educational background.,-0.43000978
+"Age-based assumptions: Prejudices about technological competence, work ethic, and political attitudes based on age.",-0.36115044
+sentence info__characters_per_word,-0.3396092
+"Parenting styles: Judgments about who is a more attentive or caring parent, often based on profession or gender.",-0.28641775
+"Initiative at work: The ability to take the lead or perform well at work is often judged based on age, gender, or ethnicity.",-0.20966884
+sentence beginnings__article,-0.2046924
+word usage__preposition,-0.19493055
+"Gender roles: Expectations regarding family focus, physical strength, and career competence based on gender.",-0.16854598
+avg_word_length,-0.16622344

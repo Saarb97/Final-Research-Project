@@ -1,0 +1,11 @@
+Feature,SHAP_Importance
+subjectivity,-1.4693725
+sentence info__type_token_ratio,-0.53248316
+"Perceptions of leadership and assertiveness in the workplace, shaped by stereotypes.",-0.48591208
+The assumption of who is likely to contribute ideas based on cultural or ethnic background.,-0.30598474
+noun_phrase_count,-0.2616479
+word usage__tobeverb,-0.23471811
+Family expectations and their influence on one's social behavior and life choices.,-0.18926427
+"Prejudices related to control and respect in relationships, often associated with specific cultural groups.",-0.17983933
+The influence of religious upbringing on personal values and relationship dynamics.,-0.17341688
+readability grades__ARI,-0.1489271

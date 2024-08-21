@@ -1,0 +1,11 @@
+Feature,Coefficient,Odds Ratio,Probability Increase (%)
+Implicit ranking of cultural groups based on who is depicted as having more active or leadership roles in community settings.,-0.5127985200587805,0.5988174291527251,40.118257084727496
+Specific women (often of Asian descent) are consistently depicted as speaking regularly.,-0.4918981589248788,0.6114646348773961,38.85353651226039
+word usage__nominalization,-0.4409780432072275,0.6434068335683769,35.659316643162306
+Asian individuals are frequently portrayed as regular speakers or active participants.,-0.229234123761304,0.7951423499931999,20.48576500068001
+The assumption that a woman will be the speaker when paired with a man.,-0.22636695830159212,0.7974254260890883,20.257457391091172
+"Characters of specific ethnicities (e.g., Asian) are shown as having regular speaking roles, implying higher cultural status.",-0.18678631671658477,0.8296209935841786,17.037900641582137
+European individuals paired with non-European individuals often assume the speaking role.,-0.04665508108528877,0.9544165371400527,4.55834628599473
+sentence info__type_token_ratio,0.015755349731786616,1.0158801196577492,1.5880119657749159
+lexical_diversity,0.0479606333079271,1.0491293537593087,4.912935375930871
+named_entity_count,0.45335724014975703,1.5735862342971765,57.358623429717646

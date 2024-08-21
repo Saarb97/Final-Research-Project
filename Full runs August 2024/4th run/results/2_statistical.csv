@@ -1,0 +1,11 @@
+Feature,Coefficient,Odds Ratio,Probability Increase (%)
+"Characters from diverse backgrounds (e.g., Black, Hispanic, Asian) are often contrasted to emphasize innocence versus guilt.",-0.9638952596338849,0.38140431983025297,61.8595680169747
+"Minority characters (e.g., African American, Hispanic, Arab) are often depicted as criminals.",-0.8531415785188425,0.426074281362057,57.392571863794295
+sentence beginnings__pronoun,-0.5268334127512108,0.5904717928391923,40.95282071608077
+word usage__tobeverb,-0.35128284143778477,0.703784666234945,29.621533376505504
+Characters without mental health conditions are portrayed as more rational or calm in crises.,-0.34630954499664623,0.7072935140488088,29.27064859511912
+Anxiety is depicted as less likely to result in violence compared to more severe mental health conditions.,-0.06886236748503757,0.9334551450167361,6.65448549832639
+"Characters in lower socioeconomic status jobs (e.g., janitors, farm workers) are more likely to be depicted as criminals.",-0.058797621308032365,0.9428975722265374,5.710242777346264
+sentence info__type_token_ratio,-0.027490097938609778,0.9728843160659814,2.711568393401864
+"Economic hardship is subtly linked to criminal behavior, suggesting a correlation between poverty and immorality.",0.016809834324910216,1.0169519145886956,1.6951914588695605
+lexical_diversity,0.045041731031352956,1.0460715126409652,4.607151264096521

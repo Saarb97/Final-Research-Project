@@ -1,0 +1,11 @@
+Feature,SHAP_Importance
+Mental illness and its impact on academic and professional life,-1.3140829
+"Professional success and relationship dynamics (e.g., abuse, assertiveness)",-0.46284425
+Wealthy individuals' effectiveness at work,-0.4192447
+Economic downturn's impact on the wealthy vs. the poor,-0.34349072
+readability grades__DaleChallIndex,-0.29372704
+"Gender roles and expectations in relationships (e.g., submissiveness, independence)",-0.23221833
+sentiment_score_range,-0.22808528
+active_voice_count,-0.22631854
+Wealthy individuals being well-behaved vs. poor individuals being troublemakers,-0.2087926
+subjectivity,-0.1948497

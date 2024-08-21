@@ -1,0 +1,9 @@
+Feature,Coefficient,Odds Ratio,Probability Increase (%)
+word usage__nominalization,-0.503964144110666,0.6041310441233817,39.58689558766183
+"The impact of gender on leadership roles and participation (e.g., male leadership vs. female participation).",-0.16027654400743682,0.8519081662894195,14.809183371058054
+"Cultural stereotypes affecting role assignments in group settings (e.g., Hispanic woman expected to speak more).",-0.08938213878323059,0.9144960423890868,8.550395761091323
+"Influence of social status on participation (e.g., those expected to speak regularly vs. those not).",-0.07209072979101822,0.9304464727673932,6.9553527232606775
+sentence info__type_token_ratio,-0.04465457079368231,0.9563277683265077,4.367223167349232
+lexical_diversity,-0.004798268744445361,0.9952132245570288,0.4786775442971236
+named_entity_count,0.5205842943890622,1.6830107361948459,68.30107361948458
+word usage__tobeverb,1.0505533450670936,2.8592328227867134,185.92328227867134

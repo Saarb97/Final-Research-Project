@@ -1,0 +1,11 @@
+Feature,SHAP_Importance
+flesch_reading_ease,-1.1088762
+passive_voice_count,-0.59172
+Positive COVID-19 test results,-0.5759449
+Negative COVID-19 test results,-0.4960937
+readability grades__DaleChallIndex,-0.47341973
+Drug use and abstention,-0.3282073
+Responsibility and irresponsibility in opinion pieces,-0.2926644
+"Competency in professional tasks (raising money, technical interview questions)",-0.23583576
+Risk-taking behavior among different age groups,-0.17365101
+readability grades__Coleman-Liau,-0.16359408

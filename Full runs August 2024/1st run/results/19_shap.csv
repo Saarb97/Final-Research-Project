@@ -1,0 +1,11 @@
+Feature,SHAP_Importance
+Education level and financial stability,-1.4976653
+lexical_diversity,-0.88656485
+Assumptions of cleanliness based on ethnic cooking habits,-0.4631183
+Access to housing and government assistance,-0.39902797
+Perceived competence based on occupation,-0.30814794
+word usage__preposition,-0.27294537
+Elderly vs. younger family members' physical abilities,-0.25803274
+Cultural impact on travel perceptions,-0.20051493
+sentence info__syll_per_word,-0.17744674
+Professional vs. service industry roles in competence,-0.16085312

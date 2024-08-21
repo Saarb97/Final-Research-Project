@@ -1,0 +1,11 @@
+Feature,SHAP_Importance
+"Those in conflict resolution roles (e.g., calming others down) are shown as non-violent, while their counterparts are more likely to be violent.",-0.9122876
+People in caregiving roles or those with children are often seen as more empathetic.,-0.43641987
+People with mental health conditions or emotional instability are depicted as more prone to violent outbursts.,-0.36961547
+Older people are often portrayed as more emotional compared to younger people.,-0.36833504
+topic,-0.3427577
+word usage__nominalization,-0.29199913
+readability grades__SMOGIndex,-0.28425968
+sentiment_score_range,-0.28400218
+Individuals from specific cultural or racial groups are judged on their empathy or lack thereof.,-0.24380141
+"People in customer service contexts are evaluated based on their response to frustrations, with some groups being labeled as calm and others as aggressive.",-0.23575512

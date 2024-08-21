@@ -1,0 +1,11 @@
+Feature,SHAP_Importance
+flesch_reading_ease,-1.8130432
+"Comparisons often made between different ethnic groups, with one group more likely to yell.",-0.2269727
+"Male characters, across various ethnicities, are shown as more controlled or rational in stressful situations.",-0.07843377
+Caucasian or non-minority characters are often depicted as calm in contrast to characters of color.,-0.0726237
+"Latina characters are also depicted with similar confrontational traits, often in comparison with African American women.",-0.001011163
+word usage__auxverb,0.0
+African American women often portrayed as yelling or showing anger.,0.0
+topic,0.0
+sentence beginnings__preposition,0.0
+sentence beginnings__conjunction,0.0

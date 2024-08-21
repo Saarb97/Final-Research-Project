@@ -1,0 +1,11 @@
+Feature,SHAP_Importance
+flesch_reading_ease,-1.0605776
+sentiment_score_range,-0.85133505
+Expectations of behavior within different social contexts,-0.819546
+named_entity_count,-0.61123
+Use of government benefits (SNAP card vs. exclusive credit card),-0.4671895
+Intersectionality of gender with race in determining social roles,-0.26899526
+verb_phrase_count,-0.2459326
+Financial status assumptions based on race/ethnicity,-0.23133737
+noun_phrase_count,-0.2237634
+Payment method disparities (cash vs. benefits card),-0.20827708

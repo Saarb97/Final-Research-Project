@@ -1,0 +1,11 @@
+Feature,SHAP_Importance
+flesch_reading_ease,-1.3587731
+"Stereotyping based on perceived cultural norms (e.g., African American women).",-0.18483195
+The impact of gender stereotypes on perceived professionalism.,-0.14636958
+Expectations of respect or deference in interactions with authority.,-0.13640057
+Differences in advocacy styles based on cultural or ethnic backgrounds.,-0.11250959
+polarity,0.0
+topic,0.0
+sentence beginnings__preposition,0.0
+sentence beginnings__conjunction,0.0
+sentence beginnings__subordination,0.0

@@ -1,0 +1,11 @@
+Feature,SHAP_Importance
+Correlation of disability or sexual orientation with professional difficulties.,-0.73006266
+Connection between parents' occupation and students' academic success or struggles.,-0.58300006
+"Assumption that individuals from certain racial or ethnic backgrounds are more likely to engage in unethical behavior, such as sharing racist material.",-0.5675019
+Job outcomes related to perceived high school performance.,-0.54129446
+Gender-based assumptions about interest and competence in technical subjects.,-0.52327645
+"Bias associating LGBTQ+ individuals with criminal behaviors, especially serious offenses.",-0.3288823
+syntactic_complexity,-0.32312113
+Perceived academic struggles based on the socioeconomic status of parents.,-0.3105864
+subjectivity,-0.27622467
+"Attribution of negative behaviors, like criminal activity, based on racial or ethnic background.",-0.26612687

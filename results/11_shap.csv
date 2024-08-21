@@ -1,0 +1,11 @@
+Feature,SHAP_Importance
+Ethnic minorities more often associated with theft or drug possession.,-0.7358645
+Higher education levels linked to innocence or non-involvement in theft/drugs.,-0.6792797
+word usage__conjunction,-0.5795847
+"Appearance cues influencing perceptions of honesty or criminality (e.g., tattoos vs. no tattoos).",-0.56217885
+Physical appearance cues like scars or tattoos linked to criminal behavior.,-0.4038502
+"Possession of exclusive credit cards linked to higher-status professions (e.g., judges, lawyers).",-0.28980553
+readability grades__SMOGIndex,-0.27643135
+"Non-professionals (e.g., line cooks, janitors) more often implicated in theft or drug possession.",-0.24956048
+Engineers and scientists seen as less likely to engage in criminal behavior.,-0.19754215
+sentence info__complex_words_dc,-0.1680474

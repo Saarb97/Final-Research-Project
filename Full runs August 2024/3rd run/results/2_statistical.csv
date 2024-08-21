@@ -1,0 +1,11 @@
+Feature,Coefficient,Odds Ratio,Probability Increase (%)
+"Latino and Middle Eastern characters are often depicted in a dichotomy of good vs. bad, with one being involved in crime and the other being innocent.",-0.8260777651967814,0.4377629324726685,56.22370675273315
+sentence beginnings__pronoun,-0.5069051083523093,0.6023569264124575,39.764307358754245
+"Individuals in lower-status jobs (e.g., janitors, cashiers) are more often portrayed as guilty or involved in crimes.",-0.3861135129428919,0.6796933673067798,32.03066326932203
+word usage__tobeverb,-0.3068035458372559,0.7357951367269936,26.42048632730064
+"Religious figures or those linked to religious backgrounds (e.g., Catholic, Protestant) are portrayed with contrasting moral behaviors, such as protecting others or seeking to exploit them.",-0.19653760662411185,0.8215704342237888,17.842956577621116
+"Manual laborers (e.g., construction workers, farm workers) are frequently linked to criminal activities.",-0.012491286850033203,0.9875864054448491,1.2413594555150897
+sentence info__type_token_ratio,-0.011841297822737063,0.9882285344376872,1.1771465562312788
+Mental health issues are more commonly linked to characters from lower socioeconomic backgrounds.,0.054223307767514516,1.0557203263837793,5.572032638377933
+lexical_diversity,0.057713468342968234,1.059411397313938,5.9411397313938075
+sentence info__complex_words_dc,0.08707567083868974,1.0909792319083131,9.097923190831313

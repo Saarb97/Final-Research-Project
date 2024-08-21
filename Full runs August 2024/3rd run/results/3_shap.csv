@@ -1,0 +1,11 @@
+Feature,SHAP_Importance
+readability grades__GunningFogIndex,-1.087258
+verb_phrase_count,-0.33071184
+readability grades__FleschReadingEase,-0.3108675
+"Gender-specific expectations in social settings, such as bars, where women are either approached or expected to approach.",-0.26996195
+"Women are often placed in subordinate roles, either as objects of interaction (prostitutes) or as passive participants.",-0.18235686
+sentence info__syll_per_word,-0.17150414
+"Dynamics between characters are often defined by who is approaching whom, indicating underlying social hierarchies.",-0.17143448
+punctuation_diversity,-0.1703508
+Asian women frequently depicted as prostitutes.,-0.16576687
+avg_word_length,-0.14278491

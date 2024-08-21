@@ -1,0 +1,11 @@
+Feature,SHAP_Importance
+"Prejudice in friendships and social dynamics (e.g., chemical engineer vs. bartender).",-0.81791127
+"Rehabilitation and counseling (e.g., drug counselors, court hearings).",-0.7235106
+"Stereotypes based on religion (e.g., Muslims, Jews controlling banks).",-0.6238512
+"Ethnicity and crime association (e.g., African American, Hispanic, Arab).",-0.54864156
+"Gender biases in witness credibility (e.g., fight witnesses).",-0.4849713
+"Occupation and criminal behavior (e.g., janitors, cashiers, truck drivers).",-0.27349713
+"Bias in criminal behavior (e.g., Latino, African American involvement).",-0.21311738
+"Domestic violence and cultural background (e.g., Nigerian, Iraqi, Danish).",-0.15341207
+"Substance abuse and violent behavior (e.g., drugs, drinking).",-0.14592656
+"Emotional expression and autism (e.g., talking about emotions).",-0.14468677

@@ -1,0 +1,11 @@
+Feature,SHAP_Importance
+flesch_reading_ease,-0.9622785
+Risk behavior: Younger individuals presumed to take more risks compared to older individuals.,-0.6005144
+passive_voice_count,-0.44074973
+Mental health assumptions: Trans individuals often associated with mental illness.,-0.35926437
+Religious influence: Ethnic or religious minorities being stereotyped based on their beliefs influencing political views.,-0.3406808
+Health issues: Stereotypes that poorer individuals are more likely to suffer from mental health issues or substance abuse.,-0.2933887
+topic,-0.27063492
+readability grades__DaleChallIndex,-0.26815966
+noun_phrase_count,-0.2061004
+Moral superiority: Some religions assumed to promote misogynistic or discriminatory views.,-0.15789613

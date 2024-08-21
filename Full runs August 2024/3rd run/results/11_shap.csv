@@ -1,0 +1,11 @@
+Feature,SHAP_Importance
+"Physical attributes, such as scars or the presence of a disability, are linked to criminal behavior or incompetence.",-0.9676659
+"Men, particularly those with visible scars or tattoos, are often associated with violent crimes.",-0.9183117
+word usage__conjunction,-0.7597689
+Ethnic minorities are more likely to be depicted as recipients of government assistance or benefits.,-0.47977364
+readability grades__LIX,-0.34003505
+Occupations involving physical labor or lower educational requirements are associated with laziness or incompetence.,-0.2873006
+People waiting at unemployment offices are often judged based on assumptions about their work ethic.,-0.25943086
+subjectivity,-0.21038821
+verb_phrase_count,-0.20087689
+readability grades__Kincaid,-0.17987776

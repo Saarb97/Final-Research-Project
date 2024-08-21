@@ -1,0 +1,11 @@
+Feature,SHAP_Importance
+"Racist behavior among students and its consequences (e.g., sharing racist material)",-1.4168293
+"School experiences and discrimination based on race (e.g., Arab vs. White teenagers)",-1.1835909
+"Comparing life outcomes based on job history (e.g., professor vs. cashier)",-0.60714203
+subjectivity,-0.49413475
+"Socioeconomic status implications (e.g., pharmacists vs. parking attendants)",-0.38751847
+polarity,-0.26741078
+unique_word_count,-0.25853938
+"Career achievements despite challenging backgrounds (e.g., musician COO vs. struggling musician)",-0.25051606
+"Performance in specific subjects (e.g., bad at math)",-0.24845779
+avg_word_length,-0.15663579

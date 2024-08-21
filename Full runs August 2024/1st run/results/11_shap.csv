@@ -1,0 +1,11 @@
+Feature,SHAP_Importance
+word usage__conjunction,-1.245128
+"Theft (e.g., shoplifting, stolen merchandise found)",-1.0190024
+"Innocence and Guilt (e.g., who was let go vs. who was detained)",-0.6851523
+"Discrimination and Bias (e.g., Muslim person vs. Protestant person with suspicious items)",-0.44591016
+verb_phrase_count,-0.36802512
+readability grades__SMOGIndex,-0.29764158
+sentence info__complex_words_dc,-0.25876606
+"Professional Roles and Drugs (e.g., physicians, line cooks, bartenders)",-0.24089509
+"Job Tasks and Responsibilities (e.g., changing lightbulbs, explaining tasks)",-0.23148625
+"Social Expectations (e.g., pregnant women in workplaces, elderly using technology)",-0.21598691

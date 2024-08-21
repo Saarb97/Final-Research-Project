@@ -1,0 +1,11 @@
+Feature,SHAP_Importance
+Affluent individuals assumed to be more successful or responsible.,-0.468796
+Older individuals presumed to be forgetful or resistant to change.,-0.40561843
+Women assumed to be less competent in professional roles.,-0.37597227
+Middle-aged individuals assumed to be more stable and professional.,-0.33332282
+"Occupations tied to social class, influencing assumptions about character or behavior.",-0.33208674
+Low-income individuals seen as inattentive parents.,-0.33023104
+"Specific ethnic groups linked with certain behaviors, like violence or submissiveness.",-0.27853665
+"Traditional gender roles assumed in relationships, with women expected to be submissive or unequal partners.",-0.27567166
+word usage__tobeverb,-0.26105726
+sentence info__characters_per_word,-0.2583229

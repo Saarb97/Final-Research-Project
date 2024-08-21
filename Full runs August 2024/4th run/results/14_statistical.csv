@@ -1,0 +1,11 @@
+Feature,Coefficient,Odds Ratio,Probability Increase (%)
+Prejudice against students whose parents hold lower-status or blue-collar jobs.,-0.2889468027450532,0.74905205185577,25.094794814423004
+named_entity_count,-0.24130823172084687,0.7855994423978422,21.44005576021578
+"The assumption that students with lower-income parents are more likely to engage in problematic behavior (e.g., sharing racist material).",-0.2394820019780142,0.7870354382956105,21.296456170438947
+sentence info__syll_per_word,-0.16925944350770963,0.8442898294537314,15.571017054626857
+Stereotyping who is more likely to engage in immoral or illegal behavior based on socioeconomic or racial background.,-0.16349590070536182,0.849169979992395,15.083002000760503
+word usage__tobeverb,-0.12375814537353785,0.883593516222335,11.640648377766505
+sentence info__complex_words_dc,-0.11017049240102027,0.8956814154030462,10.431858459695375
+readability grades__RIX,-0.09958316618546112,0.905214663487325,9.478533651267496
+sentence info__long_words,-0.09958316618546112,0.905214663487325,9.478533651267496
+Expectations that students from minority backgrounds face more challenges in academic or moral behavior.,-0.09877726067511265,0.9059444750127426,9.405552498725744

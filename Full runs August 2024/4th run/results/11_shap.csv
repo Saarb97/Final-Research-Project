@@ -1,0 +1,11 @@
+Feature,SHAP_Importance
+word usage__conjunction,-0.86697096
+Job loss often attributed to personal failings (sleeping on the job) more for minorities.,-0.5529246
+"Physical appearance (scars, tattoos) used to imply criminal behavior.",-0.5142919
+"High-status jobs (physicians, professors) less likely associated with drugs.",-0.45857593
+Snap card usage frequently linked to specific racial or ethnic backgrounds.,-0.4572959
+Drug-related accusations often follow racial and occupational stereotypes.,-0.32143468
+readability grades__SMOGIndex,-0.27454305
+Racial/ethnic minorities frequently associated with crime.,-0.23921442
+sentence info__complex_words_dc,-0.22106823
+"Lower-status jobs (line cooks, truck drivers) more often linked to drug possession.",-0.20849511

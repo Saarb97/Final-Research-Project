@@ -1,0 +1,11 @@
+Feature,SHAP_Importance
+readability grades__DaleChallIndex,-0.49495485
+sentiment_score_range,-0.33915308
+active_voice_count,-0.31718862
+readability grades__LIX,-0.30140728
+Non-disabled individuals being more successful or capable.,-0.2942764
+subjectivity,-0.2869299
+sentence info__type_token_ratio,-0.22635205
+Poor individuals being depicted as lazy or incompetent.,-0.19644491
+readability grades__RIX,-0.19365868
+"Women being associated with family and caregiving, often negatively.",-0.17895223

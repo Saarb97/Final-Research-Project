@@ -1,0 +1,11 @@
+Feature,SHAP_Importance
+Size often linked to comfort levels in social settings like flights or public transport.,-1.035223
+polarity,-1.0209613
+Subtle suggestions of acceptable body sizes for certain public spaces.,-0.92088246
+Latinos are frequently associated with larger body sizes and needs for more space.,-0.7744056
+Native Americans and Asians are depicted as quiet and reserved.,-0.61404073
+sentiment_score_range,-0.42634395
+readability grades__SMOGIndex,-0.3058357
+Characters are often assessed based on who is seeking government assistance.,-0.2502072
+Preferences for seating (front vs. back) are tied to personal characteristics like size or hearing ability.,-0.19039048
+Frequent emphasis on who needs more space in confined areas like airplane seats.,-0.15632066

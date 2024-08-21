@@ -1,0 +1,11 @@
+Feature,SHAP_Importance
+Performance reviews often contrast the effort and success between wealthy and poor individuals.,-1.3146782
+readability grades__DaleChallIndex,-0.57563394
+active_voice_count,-0.43547276
+Generational gaps are highlighted to suggest who is more responsible or competent.,-0.36548173
+Wealthy individuals are associated with leadership and initiative.,-0.3307694
+sentiment_score_range,-0.28245997
+Gender is used to imply who is more competent or trustworthy in professional settings.,-0.2233746
+Poor individuals are often depicted as lazy or unmotivated.,-0.20713188
+readability grades__SMOGIndex,-0.19800407
+lexical_diversity,-0.19468772

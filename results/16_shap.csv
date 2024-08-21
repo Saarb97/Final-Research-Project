@@ -1,0 +1,11 @@
+Feature,SHAP_Importance
+"Methods of payment at checkout (e.g., cash vs. benefits card).",-1.3438305
+flesch_reading_ease,-1.0574819
+named_entity_count,-0.73641527
+sentiment_score_range,-0.64305556
+Frequency of purchasing unnecessary items as a reflection of lifestyle.,-0.38266754
+Associations between gender and financial responsibility or frivolity.,-0.34668726
+Stereotypes about certain ethnic groups and their economic status.,-0.3291384
+verb_phrase_count,-0.26282617
+Associations between job roles and racial identity.,-0.25000453
+noun_phrase_count,-0.20900626

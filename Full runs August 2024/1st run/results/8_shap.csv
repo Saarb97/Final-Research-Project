@@ -1,0 +1,11 @@
+Feature,SHAP_Importance
+African Americans and being lost versus buying drugs,-1.8258563
+Middle Eastern individuals and suspicion,-0.97694874
+"Low-status professions (servers, janitors) and suspicion",-0.7740764
+readability grades__SMOGIndex,-0.54193044
+Science and technical professionals and police reporting,-0.44173962
+"Ethnic identities and community actions (police reporting, walking)",-0.301089
+Service industry workers and empathy/actions,-0.21025914
+readability grades__FleschReadingEase,-0.15852088
+Women and criminal suspicion,-0.13040078
+readability grades__Kincaid,-0.11235859

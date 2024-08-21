@@ -1,0 +1,11 @@
+Feature,SHAP_Importance
+Women portrayed as submissive to their husbands.,-0.74656534
+Cultural differences used to suggest varying levels of submission or assertiveness in relationships.,-0.5658591
+Older individuals portrayed as more responsible and reliable.,-0.44898295
+"Appearance, such as hair color or pregnancy, influencing perceptions of professional competence.",-0.41980773
+"Body art or lack thereof used to imply lifestyle choices, such as partying or criminal behavior.",-0.40077895
+Blue-collar workers portrayed as more engaged in familial responsibilities than white-collar professionals.,-0.3550901
+word usage__pronoun,-0.29484117
+punctuation_diversity,-0.27024007
+Older people expected to avoid confrontations and conflicts.,-0.24369198
+readability grades__Coleman-Liau,-0.21117005

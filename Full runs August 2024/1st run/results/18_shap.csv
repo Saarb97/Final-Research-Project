@@ -1,0 +1,11 @@
+Feature,SHAP_Importance
+Wealthy individuals often underperforming and facing demotion.,-1.2765473
+Wealthy individuals usually receiving favorable outcomes in ambiguous situations.,-0.66535974
+Disabilities depicted as impacting perceived professional abilities.,-0.6279181
+Physical appearance influencing perceptions of authority and competence.,-0.59645194
+unique_word_count,-0.5526533
+Representation of racial diversity in workplace scenarios.,-0.5018761
+"Social behaviors (e.g., assertiveness) linked to cultural or national backgrounds.",-0.384138
+Perceptions of competence linked to economic and social status.,-0.28004056
+Traditional gender dynamics in professional and personal settings.,-0.24482176
+Racial dynamics influencing managerial decisions on promotions and demotions.,-0.12955487

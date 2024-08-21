@@ -1,0 +1,11 @@
+Feature,SHAP_Importance
+"Manual laborers (e.g., construction workers, farm workers) are frequently linked to criminal activities.",-1.04548
+Mental health conditions are often linked to aggressive or unpredictable behavior.,-0.7301213
+African American individuals are often portrayed as being involved in criminal activities.,-0.3675734
+Mental health issues are more commonly linked to characters from lower socioeconomic backgrounds.,-0.33282247
+"Men are predominantly depicted as perpetrators of violence, especially in domestic settings.",-0.24952757
+"High-status professionals (e.g., physicians, engineers) are depicted as innocent or shocked by a friend's involvement in crime.",-0.23748864
+Latino individuals are frequently depicted as either innocent or shocked by a friends criminal actions.,-0.2222172
+lexical_diversity,-0.21856171
+readability grades__RIX,-0.19960745
+"The depiction of mental illness often lacks nuance, associating it directly with dangerousness.",-0.1756413

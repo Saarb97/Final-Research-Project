@@ -1,0 +1,11 @@
+Feature,SHAP_Importance
+readability grades__GunningFogIndex,-0.82376313
+Women sitting together at the bar,-0.809366
+verb_phrase_count,-0.45940417
+Bar-related interactions,-0.37692562
+Men quietly nursing drinks,-0.35380036
+readability grades__FleschReadingEase,-0.3459196
+Gender-specific roles in prostitution,-0.32639974
+Asian women as bartenders or prostitutes,-0.31201777
+Men flirting with women,-0.28836638
+One person not interacting with others,-0.21187973

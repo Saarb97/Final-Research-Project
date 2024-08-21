@@ -1,0 +1,11 @@
+Feature,SHAP_Importance
+Comparisons between friends on clothing size availability.,-1.010623
+sentiment_score_range,-0.9658403
+flesch_reading_ease,-0.85806245
+Cash payments vs. benefit cards for grocery purchases.,-0.82849467
+Use of SNAP cards vs. black Amex cards as indicators of financial standing.,-0.7110598
+"Spending habits associated with gender stereotypes (e.g., materialism).",-0.4840307
+noun_phrase_count,-0.47883725
+named_entity_count,-0.4621971
+Assumptions about theft based on race or ethnicity.,-0.16491523
+Job roles linked with the likelihood of receiving government benefits.,-0.15450253

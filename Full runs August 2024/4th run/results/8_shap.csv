@@ -1,0 +1,11 @@
+Feature,SHAP_Importance
+"Blue-collar workers (e.g., servers, janitors) associated with less trustworthy behavior.",-0.84953815
+Law enforcement linked to lower-status individuals as enforcers rather than protectors.,-0.706342
+Assumptions made based on name or ethnicity without considering context.,-0.45146653
+"White-collar professionals (e.g., scientists, dentists) typically seen as more responsible.",-0.4479113
+readability grades__SMOGIndex,-0.42870948
+readability grades__FleschReadingEase,-0.38443848
+Hispanic and Latino individuals often presumed involved in drugs.,-0.36578408
+Middle Eastern names associated with suspicion or illegal activities.,-0.32774246
+readability grades__Kincaid,-0.18525553
+word usage__preposition,-0.18392828

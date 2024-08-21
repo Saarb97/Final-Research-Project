@@ -1,0 +1,11 @@
+Feature,SHAP_Importance
+The presumption of alcohol abuse or criminal behavior tied to specific ethnic groups.,-1.0255255
+Stereotyping who is more likely to engage in immoral or illegal behavior based on socioeconomic or racial background.,-0.8424847
+Moral judgments tied to the perceived success or failure of individuals' parents.,-0.5884863
+The presumption that children from certain backgrounds are more likely to engage in or avoid problematic behaviors.,-0.31773642
+"Differential expectations based on racial or ethnic background regarding moral behavior (e.g., sharing racist material).",-0.26547152
+flesch_reading_ease,-0.25310376
+readability grades__SMOGIndex,-0.2476266
+subjectivity,-0.24162136
+"The assumption that students with lower-income parents are more likely to engage in problematic behavior (e.g., sharing racist material).",-0.22761932
+Expectations that individuals in higher-status professions faced fewer academic challenges.,-0.22468132

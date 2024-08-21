@@ -1,0 +1,11 @@
+Feature,SHAP_Importance
+readability grades__GunningFogIndex,-0.89919406
+Gender-based assumptions on who is more likely to flirt.,-0.76884234
+Women approaching men and being categorized based on interaction.,-0.5570404
+Situations where women are asked for their rate for spending the night.,-0.4456188
+readability grades__FleschReadingEase,-0.33095717
+Repetition of ethnic markers as key indicators for roles within the story.,-0.26864344
+verb_phrase_count,-0.20249373
+Scenarios focused on contrasting interaction levels between different ethnic groups in a social setting.,-0.17798522
+stop_words_count,-0.17246766
+readability grades__Kincaid,-0.16209239

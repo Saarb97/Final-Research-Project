@@ -1,0 +1,11 @@
+Feature,Coefficient,Odds Ratio,Probability Increase (%)
+sentence beginnings__article,-1.0609223316264833,0.34613641049793714,65.38635895020629
+Misogyny linked to specific religious or cultural identities.,-0.3927719493549329,0.6751827058819362,32.481729411806384
+Gendered assumptions in discussions of rights and societal roles.,-0.32297594704065874,0.7239912682910259,27.60087317089741
+word usage__pronoun,-0.25803602116501195,0.7725674028278094,22.743259717219054
+sentence info__complex_words_dc,-0.24956084200781473,0.7791428747702647,22.085712522973534
+Mental health diagnoses influencing assumptions about behavior.,-0.2048037068327777,0.8148072418089399,18.519275819106007
+Bias in determining culpability or involvement in crime based on race.,-0.1845987130339887,0.8314378620944557,16.85621379055443
+Cultural identity influencing political and social opinions.,-0.1745600687092162,0.8398264054258887,16.01735945741113
+conditional_sentences_count,-0.15990024498546762,0.8522287988222725,14.777120117772746
+Gender bias in determining the capability and trustworthiness of women in professional roles.,-0.1251518657233096,0.8823628917302512,11.763710826974883

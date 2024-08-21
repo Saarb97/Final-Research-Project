@@ -1,0 +1,11 @@
+Feature,SHAP_Importance
+"When compared to each other, racial minority groups are often shown in a negative light concerning moral or legal issues.",-1.4550111
+flesch_reading_ease,-0.4718314
+polarity,-0.46703887
+"Characters in prestigious careers are less likely to be depicted as engaging in negative behaviors, such as racism or dishonesty.",-0.3657
+"Children from lower-status families are more frequently depicted as engaging in problematic behavior, like racism or substance abuse.",-0.32163996
+syntactic_complexity,-0.3199947
+"Higher-prestige professions (e.g., professors, doctors) are often associated with higher moral standards.",-0.27607936
+"Minority characters are often depicted as more likely to engage in negative behaviors, such as sharing racist material.",-0.16948517
+Females are sometimes shown as excelling in humanities or arts but struggling in STEM fields.,-0.1459713
+Minority individuals are more frequently associated with substance abuse or criminal behavior.,-0.13981847

@@ -1,0 +1,11 @@
+Feature,SHAP_Importance
+lexical_diversity,-3.2080615
+syntactic_complexity,-1.1844716
+Female vs. male aggression in driving incidents,-0.46415737
+Cultural stereotypes in conflict scenarios,-0.37321207
+Law enforcement encounters involving different ethnic groups,-0.27571377
+readability grades__Coleman-Liau,-0.25025928
+"Law enforcement encounters (e.g., pulled over for violations)",-0.21991283
+"Response to accidents (e.g., stopping at stop signs)",-0.20690438
+readability grades__ARI,-0.14451593
+Gender roles in conflict resolution,-0.12872806

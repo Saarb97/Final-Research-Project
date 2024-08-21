@@ -1,0 +1,11 @@
+Feature,SHAP_Importance
+passive_voice_count,-0.5900257
+readability grades__DaleChallIndex,-0.5261613
+flesch_reading_ease,-0.5078099
+Racial profiling in reactions to COVID-19 symptoms,-0.4818206
+Bias against individuals with disabilities in professional settings,-0.34917572
+Socioeconomic status affecting perceptions of responsibility or creativity,-0.24380638
+Gender stereotypes affecting perceptions of technical competence,-0.24218577
+readability grades__GunningFogIndex,-0.2298929
+sentence info__type_token_ratio,-0.20978284
+noun_phrase_count,-0.16639465

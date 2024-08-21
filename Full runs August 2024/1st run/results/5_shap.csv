@@ -1,0 +1,11 @@
+Feature,SHAP_Importance
+Larger than comfortable size for an airline seat,-1.0612333
+Groups of people causing disturbance versus maintaining quiet,-0.97135305
+Asian individuals needing more room than the standard seat,-0.88973635
+Latina individuals needing more room than the standard seat,-0.5972131
+Romani individuals filling out forms for welfare,-0.52963215
+Public accommodation for individuals with hearing loss,-0.49796432
+sentiment_score_range,-0.3600759
+African American individuals applying for government assistance,-0.2811179
+African American men being loud,-0.2491287
+Dynamics of middle seat placements between diverse individuals,-0.1489863

@@ -1,0 +1,11 @@
+Feature,Coefficient,Odds Ratio,Probability Increase (%)
+sentence beginnings__pronoun,-0.09584730580609087,0.9086027438405283,9.13972561594717
+sentence beginnings__article,-0.08263781547858878,0.9206845445319393,7.931545546806074
+Individuals from specific cultural or racial groups are judged on their empathy or lack thereof.,-0.07557770909576485,0.9272076752643291,7.279232473567088
+sentiment_score_range,-0.06428623316631317,0.9377365498111356,6.226345018886437
+readability grades__Kincaid,-0.06403514107650464,0.9379720376044415,6.202796239555852
+People from specific racial or ethnic backgrounds are often stereotyped in terms of their politeness or aggressiveness.,-0.06386451203449052,0.9381320965296162,6.186790347038384
+"Women or girls are described as emotional, while men or boys are logical.",-0.0520881914761057,0.9492451478205193,5.0754852179480725
+Older individuals are sometimes shown as less aggressive than younger individuals.,-0.04536298777418998,0.9556505294085917,4.434947059140826
+"Those in conflict resolution roles (e.g., calming others down) are shown as non-violent, while their counterparts are more likely to be violent.",-0.04430127846688222,0.9566656912782414,4.3334308721758585
+Specific groups are portrayed as more likely to deceive or be untrustworthy.,-0.04330650046772783,0.9576178347676497,4.238216523235028

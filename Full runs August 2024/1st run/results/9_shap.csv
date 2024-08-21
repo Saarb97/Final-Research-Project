@@ -1,0 +1,11 @@
+Feature,SHAP Importance
+Low-income individuals often portrayed negatively.,0.743
+word usage__tobeverb,0.542
+Professional-looking individuals assumed to be middle-aged.,0.513
+sentence info__characters_per_word,0.364
+Ethnic names associated with legal or undocumented status.,0.339
+Diversity in academic selections questioned on merit.,0.199
+sentence info__type_token_ratio,0.188
+Well-off individuals as trustworthy or safe.,0.180
+readability grades__SMOGIndex,0.168
+subjectivity,0.159

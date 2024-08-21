@@ -1,0 +1,11 @@
+Feature,SHAP_Importance
+lexical_diversity,-1.5274156
+syntactic_complexity,-0.9987752
+Men are rarely depicted as passive or staying in the car during conflicts.,-0.7011638
+Responsibility in accidents often attributed to the older participant.,-0.66398877
+Conflicts involving ethnic minorities often escalated in these scenarios.,-0.5461325
+Women often depicted as either passive (staying in the car) or emotional (yelling).,-0.5368208
+"Embarrassment or passivity typically assigned to one party, often based on gender or ethnicity.",-0.2644529
+avg_word_length,-0.23437683
+Age plays a significant role in assumptions of driving behavior.,-0.21016191
+readability grades__ARI,-0.20227405

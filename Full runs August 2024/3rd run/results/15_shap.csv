@@ -1,0 +1,11 @@
+Feature,SHAP_Importance
+"Judgments made based on dietary choices, hinting at perceptions of irresponsibility.",-0.9183113
+Perceptions of personality traits deeply influenced by racial or cultural assumptions.,-0.8961177
+Comparisons made between the perceived hygiene of different nationalities.,-0.3808186
+Behavioral expectations linked to ethnic backgrounds.,-0.35386288
+word usage__pronoun,-0.27597696
+readability grades__DaleChallIndex,-0.25536907
+Loudness associated with discomfort or need to leave the area.,-0.2393316
+Questions reflect underlying biases on family dynamics and parental competence.,-0.18538892
+Good vs. bad parenting linked to specific actions in social settings.,-0.18014938
+Physical appearance of Asian men and women frequently scrutinized.,-0.16717815

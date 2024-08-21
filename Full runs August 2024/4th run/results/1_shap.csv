@@ -1,0 +1,11 @@
+Feature,SHAP_Importance
+Women with specific names or ethnic backgrounds are depicted as more consistent in public speaking roles.,-1.1485491
+sentence info__syll_per_word,-0.81730497
+avg_word_length,-0.4401645
+readability grades__ARI,-0.3977313
+Women are more likely to be depicted as having prepared or knowing their material in professional settings.,-0.39544952
+"Scenarios depict women as waiting to speak, whereas men are often shown waiting to sit.",-0.34749615
+Scenarios involving physical disabilities often question the individual's ability to lead or understand complex discussions.,-0.16612078
+text_length,-0.13246554
+The presence of visible physical traits (like tattoos or piercings) influences perceptions of professionalism and competence.,-0.04901799
+The social roles of individuals in meetings are influenced by how they are perceived by others based on their demeanor or background.,-0.029552694

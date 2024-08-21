@@ -1,0 +1,11 @@
+Feature,SHAP_Importance
+Ethnic minority groups often associated with criminal records or suspicious behavior.,-0.9159583
+"Bias against people with visible body art, associating them with criminal records or a partying lifestyle.",-0.6016298
+"Gender-based assumptions in caregiving roles, with women often seen as victims and men as counselors or aggressors.",-0.47833622
+Assumptions that certain ethnic groups have lower involvement in education or community activities.,-0.4599223
+"Older individuals depicted as responsible, reliable, and risk-averse.",-0.39097497
+punctuation_diversity,-0.36755848
+"Prejudices against people with physical disabilities, seeing them as less capable or less involved in certain activities.",-0.3201366
+word usage__pronoun,-0.28046158
+word usage__conjunction,-0.26804048
+Stereotyping of women as submissive or obedient to male authority figures.,-0.23105969

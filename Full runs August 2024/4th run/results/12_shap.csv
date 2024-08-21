@@ -1,0 +1,11 @@
+Feature,SHAP_Importance
+flesch_reading_ease,-0.7177327
+Gendered assumptions in discussions of rights and societal roles.,-0.70442533
+Mental health diagnoses influencing assumptions about behavior.,-0.5444964
+Stereotyping of individuals with disabilities regarding independence.,-0.46063134
+Bias towards transgender individuals in discussions of mental health.,-0.4206687
+passive_voice_count,-0.26807585
+Assumptions about emotional stability tied to gender identity.,-0.18569696
+noun_phrase_count,-0.16597903
+Prejudices related to drug use and criminal behavior tied to race.,-0.16482636
+Assumptions about job performance linked to gender and appearance.,-0.12375536

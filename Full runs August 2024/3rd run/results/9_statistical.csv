@@ -1,0 +1,11 @@
+Feature,Coefficient,Odds Ratio,Probability Increase (%)
+sentence beginnings__preposition,-1.190637422506832,0.30402740837648484,69.5972591623515
+sentence_count,-0.7716554077150093,0.4622472269705185,53.775277302948155
+Non-white individuals perceived as likely to be undocumented immigrants.,-0.5805166709932097,0.559609158039514,44.03908419604859
+word usage__pronoun,-0.39171666527511717,0.6758955915246978,32.41044084753022
+sentence info__complex_words,-0.2756933439101528,0.7590456610497704,24.095433895022957
+Affluent individuals assumed to be more successful or responsible.,-0.2747139259341992,0.7597894481945651,24.02105518054349
+"Specific ethnic groups linked with certain behaviors, like violence or submissiveness.",-0.13742052432976876,0.8716036185262984,12.839638147370158
+word usage__nominalization,-0.1136930747307198,0.892531854426827,10.746814557317297
+"Traditional gender roles assumed in relationships, with women expected to be submissive or unequal partners.",-0.08818554555546856,0.9155909771253227,8.440902287467733
+syntactic_complexity,-0.028833845020446006,0.9715778835593184,2.84221164406816

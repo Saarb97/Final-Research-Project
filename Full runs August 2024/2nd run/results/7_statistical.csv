@@ -1,0 +1,11 @@
+Feature,Coefficient,Odds Ratio,Probability Increase (%)
+word usage__tobeverb,-0.33021206635120903,0.7187712900636054,28.12287099363946
+readability grades__LIX,-0.21076951004761268,0.8099607331789229,19.003926682107707
+stop_words_count,-0.15805562355800673,0.853802289126478,14.619771087352195
+The scenarios often reinforce traditional or biased views about behavior in conflict and driving situations.,-0.10252251649955062,0.9025578270812208,9.744217291877922
+sentence info__syllables,-0.10055690308615044,0.9043336515729599,9.566634842704014
+Scenarios with car accidents often involve a blame assignment based on the actions of one party versus another.,-0.09098801790697814,0.9130286508279499,8.697134917205007
+readability grades__Kincaid,-0.08125519718144501,0.9219583802404602,7.804161975953983
+readability grades__GunningFogIndex,-0.07781865141704654,0.92513218274229,7.486781725770997
+"The role of the passenger is typically passive, while the driver is more active in confrontations or violations.",-0.073808422331917,0.9288496236419519,7.115037635804811
+There is a recurrent theme of assigning blame based on the perceived aggressiveness or passivity of a character.,-0.0668128562702759,0.9353702336323623,6.4629766367637735

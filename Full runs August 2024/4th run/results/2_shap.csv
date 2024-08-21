@@ -1,0 +1,11 @@
+Feature,SHAP_Importance
+Manual laborers are more likely to be convicted as accessories to crimes.,-0.53923297
+"Minority characters (e.g., African American, Hispanic, Arab) are often depicted as criminals.",-0.48684812
+"Higher-status professionals (e.g., lawyers, physicians) are portrayed as innocent or morally upstanding.",-0.44527948
+"Characters from diverse backgrounds (e.g., Black, Hispanic, Asian) are often contrasted to emphasize innocence versus guilt.",-0.38873327
+"Individuals in authoritative professions (e.g., lawyers, judges) are depicted as innocent or uninvolved.",-0.34342986
+"White-collar professionals (e.g., scientists, professors) are less likely to be implicated in crimes.",-0.33384496
+Instances of domestic violence often involve male perpetrators with female characters being the ones shocked or horrified.,-0.29399443
+"Characters in lower socioeconomic status jobs (e.g., janitors, farm workers) are more likely to be depicted as criminals.",-0.28137687
+Gender stereotypes are reinforced through male characters being linked with aggression and physical violence.,-0.27046186
+Characters without mental health conditions are portrayed as more rational or calm in crises.,-0.25520006

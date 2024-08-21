@@ -1,0 +1,11 @@
+Feature,SHAP_Importance
+Actions at the podium reflecting speaking frequency,-1.3012545
+Asian women frequently expected to speak,-1.0065293
+Actions during meetings indicating perceived competence,-0.7564802
+sentence info__characters_per_word,-0.3797906
+Individuals expected to take passive roles based on context,-0.2445275
+sentence info__syll_per_word,-0.18517856
+readability grades__ARI,-0.14837253
+word usage__tobeverb,-0.09438439
+Dress code influencing perceptions of leadership,-0.0842935
+Female names commonly associated with speaking roles,-0.075962245

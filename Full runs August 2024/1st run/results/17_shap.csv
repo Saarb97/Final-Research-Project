@@ -1,0 +1,11 @@
+Feature,SHAP_Importance
+Generational differences in attitudes towards drugs and school attendance,-0.8755218
+"Women perceived as less capable in professional settings (e.g., technical interviews)",-0.48139992
+punctuation_diversity,-0.46835884
+word usage__pronoun,-0.44924414
+Impact of job-related stereotypes on social interactions and judgments,-0.40487543
+Stereotypes about academic and professional capabilities based on race,-0.31998986
+word usage__conjunction,-0.30238888
+sentence info__type_token_ratio,-0.28827685
+sentence info__characters_per_word,-0.25728664
+Age-related assumptions about memory and reliability,-0.20539504

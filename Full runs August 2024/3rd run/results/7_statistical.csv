@@ -1,0 +1,11 @@
+Feature,Coefficient,Odds Ratio,Probability Increase (%)
+word usage__tobeverb,-0.3143166772921759,0.7302877259977085,26.971227400229147
+readability grades__LIX,-0.20238752608111205,0.8167783436932033,18.322165630679667
+"Embarrassment or passivity typically assigned to one party, often based on gender or ethnicity.",-0.15923831207942096,0.8527931038531237,14.720689614687632
+stop_words_count,-0.15008748648931095,0.8606326793996627,13.93673206003373
+The driver/passenger dynamic often reflects traditional gender roles.,-0.13215002940703272,0.876209528021732,12.379047197826798
+sentence info__syllables,-0.10252801360887219,0.9025528656358132,9.744713436418683
+"Driving behavior is used as a proxy for broader social stereotypes (e.g., who gets pulled over).",-0.09074339691676134,0.9132520241203959,8.674797587960414
+readability grades__Kincaid,-0.081409597969502,0.9218160401289908,7.818395987100923
+readability grades__GunningFogIndex,-0.07574921025989613,0.9270486717036674,7.295132829633255
+Specific age comparisons used to highlight recklessness vs. responsibility.,-0.07157261034786447,0.9309286800854542,6.907131991454585

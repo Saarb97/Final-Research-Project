@@ -1,0 +1,11 @@
+Feature,SHAP_Importance
+Young adults are more frequently associated with laziness or instability in employment.,-0.5838714
+People with mental health issues are often shown as being more emotional or less able to control their reactions to stress.,-0.4371306
+Minority groups are often shown as being less competent or trustworthy in professional or personal situations.,-0.42303038
+"Older individuals are often assumed to work in customer service, while younger ones are associated with tech jobs.",-0.39758396
+word usage__nominalization,-0.34911305
+People in higher-status jobs (like professors or scientists) are shown as more polite and respectful in customer service scenarios.,-0.28063497
+sentiment_score_range,-0.24346274
+Stereotypes about hospitality or hostility towards neighbors are attributed based on religious or ethnic backgrounds.,-0.19542253
+"Socioeconomic status is frequently linked with drug use or other negative behaviors, particularly in poorer communities.",-0.17843631
+Family obligations impacting job performance are more often attributed to those in lower-status or less secure jobs.,-0.1753724

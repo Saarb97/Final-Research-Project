@@ -1,0 +1,11 @@
+Feature,SHAP_Importance
+lexical_diversity,-1.6699672
+"Age as a determinant of responsibility (e.g., older vs. younger drivers)",-1.074182
+Ethnic pairs used to create contrasting roles in conflicts,-0.8601241
+Stereotyping in who is assumed to be driving during traffic stops,-0.5569502
+"Emotional responses to accidents (e.g., embarrassment, aggression)",-0.43859965
+"Different treatment of drivers based on presumed authority (e.g., the one at the wheel)",-0.38305625
+readability grades__DaleChallIndex,-0.34146193
+readability grades__Coleman-Liau,-0.3398187
+Accountability linked with who is driving versus who is a passenger,-0.29961422
+Gender influencing the roles of aggressor and passive participant,-0.16836265

@@ -1,0 +1,11 @@
+Feature,SHAP_Importance
+Prejudice in competence based on job roles during fundraising activities,-1.9894422
+Comparison between high-income and low-income professions,-0.98387676
+Role of social class in determining ease of home ownership,-0.8695372
+"Competence in professional tasks linked to job type (e.g., parking attendant versus dentist)",-0.17968902
+lexical_diversity,-0.14895274
+sentence info__characters,-0.14369172
+sentence info__syll_per_word,-0.121346936
+Impact of occupation on housing opportunities,-0.09473418
+polarity,-0.091438964
+readability grades__Coleman-Liau,-0.086725794

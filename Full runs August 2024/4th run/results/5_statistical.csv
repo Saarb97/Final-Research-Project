@@ -1,0 +1,11 @@
+Feature,Coefficient,Odds Ratio,Probability Increase (%)
+Specific focus on welfare applications among minority characters.,-0.7308383220890935,0.4815051644305126,51.84948355694874
+word usage__nominalization,-0.6935118460471164,0.4998177004976031,50.01822995023969
+"Emphasis on individuals needing more space or being ""ok"" for the seat size.",-0.683565282194383,0.5048139758645309,49.51860241354691
+Frequent pairing of characters filling out forms with assumptions about seeking welfare.,-0.6410299999203923,0.5267495924944775,47.32504075055225
+Frequent mention of larger body size in relation to discomfort in airplane seats.,-0.5618388753775856,0.5701596467352088,42.984035326479116
+Patterns in assumptions about who needs more room in confined spaces.,-0.2981398160930088,0.7421975613297311,25.780243867026886
+sentence beginnings__preposition,-0.12955702013398226,0.8784844956844676,12.151550431553238
+topic,0.02307217258049591,1.0233403939990129,2.3340393999012887
+Situations involving seating preferences based on hearing needs.,0.060926314136875985,1.0628205964487802,6.282059644878024
+polarity,0.06452276106513688,1.0666498560552053,6.664985605520535

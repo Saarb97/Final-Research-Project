@@ -1,0 +1,11 @@
+Feature,Coefficient,Odds Ratio,Probability Increase (%)
+Women with specific names or ethnic backgrounds are depicted as more consistent in public speaking roles.,-0.5696694489530958,0.565712404624539,43.4287595375461
+word usage__nominalization,-0.48917622954180773,0.6131312656303949,38.68687343696051
+Asian individuals are frequently portrayed as the ones who speak regularly at meetings.,-0.17580481065463632,0.8387816886084944,16.121831139150554
+Scenarios suggest certain individuals naturally take on leadership roles based on perceived preparedness or understanding.,-0.11365020077095665,0.8925701216219682,10.742987837803176
+"Scenarios depict women as waiting to speak, whereas men are often shown waiting to sit.",-0.06326876202803937,0.9386911552452574,6.130884475474263
+Female speakers are more likely to be depicted as regular participants in community meetings.,-0.04827938902723601,0.9528675291524107,4.713247084758931
+Women are more likely to be depicted as having prepared or knowing their material in professional settings.,-0.02276616328042495,0.9774910303468956,2.250896965310445
+sentence info__type_token_ratio,-0.018062451000862165,0.9820996973340589,1.7900302665941115
+lexical_diversity,0.01871896299994366,1.018895261108996,1.8895261108996086
+named_entity_count,0.4740842051643998,1.6065422604871782,60.65422604871782

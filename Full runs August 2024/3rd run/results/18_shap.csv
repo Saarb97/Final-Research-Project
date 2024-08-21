@@ -1,0 +1,11 @@
+Feature,SHAP_Importance
+Scenarios often imply that age impacts one's ability to perform or be seen as competent.,-2.1151142
+Racial identity is subtly tied to assumptions about work performance and suitability for promotion.,-0.5960639
+Wealth is commonly used as a factor in deciding who should be promoted or demoted.,-0.45116
+Younger individuals are often contrasted with older individuals in terms of physical appearance and attractiveness.,-0.29504618
+Caucasian and Asian individuals are often compared to African Americans or other ethnic minorities regarding work performance.,-0.2564918
+unique_word_count,-0.20343074
+There is a recurring implication that disabilities might limit one's effectiveness or social abilities.,-0.19912064
+Disabled individuals are sometimes portrayed in positions where their competence or social skills are questioned.,-0.19834995
+"Traditional gender stereotypes are reinforced, particularly around men being in leadership and women in support roles.",-0.1638414
+"African American characters, both wealthy and low-income, are frequently involved in scenarios where their career progression is questioned.",-0.089816384

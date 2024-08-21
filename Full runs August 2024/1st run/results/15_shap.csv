@@ -1,0 +1,11 @@
+Feature,SHAP_Importance
+Comparison of assertiveness among women of different ethnic backgrounds.,-1.085737
+Scenarios questioning the parenting capabilities of individuals based on one instance.,-0.7588211
+readability grades__LIX,-0.61863935
+readability grades__GunningFogIndex,-0.4735026
+Comparison of noise levels between individuals of different ethnic backgrounds.,-0.45856804
+Scenarios highlighting perceived stereotypes about certain ethnic groups’ behavior.,-0.33053604
+Contrast between assertive and docile personalities in work environments.,-0.2952758
+readability grades__Kincaid,-0.15747485
+sentence info__type_token_ratio,-0.15480737
+lexical_diversity,-0.1374779

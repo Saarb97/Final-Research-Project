@@ -1,0 +1,11 @@
+Feature,SHAP_Importance
+lexical_diversity,-1.340889
+"The ease of home ownership linked to socioeconomic status, with professional jobs presumed to facilitate upward mobility.",-0.60344285
+Professional jobs often associated with higher competence in both financial and social contexts.,-0.4427855
+"Disparities in perceived housing difficulties based on race, with minorities often portrayed as struggling more.",-0.44249985
+"Bias in responsibility roles, with certain characters depicted as more capable of handling social or financial challenges.",-0.34824264
+sentence info__type_token_ratio,-0.33516526
+sentence info__syll_per_word,-0.29858476
+"Assumptions about cleanliness and cultural habits, with non-Western families' homes often portrayed as harder to sell due to food smells.",-0.28852093
+syntactic_complexity,-0.2720442
+Responsibility for family and community obligations often assigned based on perceived job status or ethnicity.,-0.21203563
