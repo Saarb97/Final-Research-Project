@@ -1,5 +1,8 @@
+from typing import Any
+
 import numpy as np
 import pandas as pd
+from numpy import ndarray, dtype, signedinteger, long
 from sklearn.ensemble._iforest import _average_path_length
 import numpy as np
 import multiprocessing
@@ -17,6 +20,8 @@ from sklearn.model_selection import GridSearchCV
 from sklearn.base import BaseEstimator, ClusterMixin
 from sklearn.metrics import silhouette_score, make_scorer
 from sklearn.decomposition import PCA
+
+
 class MeanShiftEstimator(BaseEstimator, ClusterMixin):
     def __init__(self, bandwidth=1.0):
         self.bandwidth = bandwidth
@@ -37,12 +42,14 @@ class MeanShiftEstimator(BaseEstimator, ClusterMixin):
         else:
             return -1  # If all samples are assigned to the same cluster
 
+
 def custom_silhouette_scorer(estimator, X):
     labels = estimator.predict(X)
     if len(set(labels)) > 1:
         return silhouette_score(X, labels)
     else:
         return -1  # If all samples are assigned to the same cluster
+
 
 def find_best_bandwidth(data, indices):
     df_for_clustering = data.iloc[:, list(indices)]
@@ -51,6 +58,8 @@ def find_best_bandwidth(data, indices):
     grid_search = GridSearchCV(mean_shift_estimator, param_grid=params, cv=3, scoring=custom_silhouette_scorer)
     grid_search.fit(df_for_clustering)
     return grid_search.best_params_['bandwidth']
+
+
 def diffi_score(forest, X, inlier_samples="auto"):
     pred = forest.predict(X)
     X_out = X[pred < 0]
@@ -125,6 +134,7 @@ def _cumulative_ic(tree, X):
         importance[f] += iic[j] / depth[i]
 
     return importance, count
+
 
 def _induced_imbalance_coeff(tree, X, node_loads):
     '''
@@ -350,7 +360,7 @@ def plot_elbow_method(data, k_range, output_file_path):
     plt.close()
 
 
-def get_optimal_k(df,max_k=100, output_file_path='elbow_method.png'):
+def get_optimal_k(df, max_k=100, output_file_path='elbow_method.png'):
     k_range = range(2, max_k)  # Adjust the range based on your dataset and needs
     plot_elbow_method(df, k_range, output_file_path)
     optimal_k = find_optimal_k(df, k_range)
@@ -421,6 +431,7 @@ def run_icalingam_v2(data):
     new_indices = (list(set(new_indices)))
     return new_indices
 
+
 def cluster_data(data, indices, bandwidth):
     df_for_clustering = data.iloc[:, list(indices)]
     # kmean_model = MiniBatchKMeans(n_clusters=20, batch_size=100).fit(df_for_clustering)
@@ -429,9 +440,6 @@ def cluster_data(data, indices, bandwidth):
     # min_bin_freq
     return mean_shift_model.predict(df_for_clustering)
 
-
-def save_data(data, file_name):
-    data.to_csv(file_name, index=False)
 
 def visualize_clusters(data, predictions, file_name):
     pca = PCA(n_components=2)
@@ -444,6 +452,33 @@ def visualize_clusters(data, predictions, file_name):
     plt.ylabel('PCA Component 2')
     plt.savefig(file_name)
     plt.close()
+
+
+def get_feature_selection_indices(path, text_col_name, target_col_name):
+    df = read_data(path)
+    indices = run_icalingam(df)
+    return indices
+
+
+def get_clusters(path, indices):
+    df = read_data(path)
+    best_bandwidth = find_best_bandwidth(df, indices)
+    predictions = cluster_data(df, indices, best_bandwidth)
+    clustered_data_df = df[['text', 'performance']].copy()
+    clustered_data_df.loc[:, 'cluster'] = predictions
+    cluster_col = clustered_data_df.pop('cluster')
+    clustered_data_df.insert(2, 'cluster', cluster_col)
+    return clustered_data_df
+
+
+def selection_and_clustering(path):
+    indices = get_feature_selection_indices(path)
+    post_selection_clustered_data_df = get_clusters(path, indices)
+    return post_selection_clustered_data_df
+
+
+def save_df_to_csv(df, file_name):
+    df.to_csv(file_name, index=False)
 
 if __name__ == '__main__':
     FILE_PATH = "fairness_bbq_dataset_with_embeddings.csv"
@@ -458,6 +493,6 @@ if __name__ == '__main__':
     cluster_col = post_selection_df.pop('cluster')
     post_selection_df.insert(2, 'cluster', cluster_col)
 
-    #save_data(post_selection_df, 'all_clustering_25_07.csv')
+    #save_df_to_csv(post_selection_df, 'all_clustering_25_07.csv')
     df_for_clustering = df.iloc[:, list(indices)]
     visualize_clusters(df_for_clustering, predictions, 'cluster_visualization.png')

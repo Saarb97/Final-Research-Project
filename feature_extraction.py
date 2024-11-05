@@ -5,11 +5,7 @@ import textstat
 import spacy
 from gensim import corpora, models
 from gensim.utils import simple_preprocess
-from spacy.lang.en.stop_words import STOP_WORDS
-from scipy.stats import chi2_contingency
 import readability
-from collections import Counter
-from sklearn.feature_extraction.text import TfidfVectorizer
 import nltk
 nltk.download('punkt')
 
@@ -168,38 +164,38 @@ def analyze_text_readability(text):
     return flat_result
 
 
-def apply_basic_text_features(df):
-    df[['polarity', 'subjectivity']] = df['text'].apply(lambda x: calculate_sentiment(x)).apply(pd.Series)
-    df['flesch_reading_ease'] = df['text'].apply(lambda x: calculate_readability(x))
-    df['syntactic_complexity'] = df['text'].apply(lambda x: calculate_syntactic_complexity(x))
-    df['lexical_diversity'] = df['text'].apply(lambda x: calculate_lexical_diversity(x))
-    df['text_length'] = df['text'].apply(len)
-    df['question_marks'] = df['text'].apply(count_question_marks)
-    df['exclamation_marks'] = df['text'].apply(count_exclamation_marks)
-    df['avg_word_length'] = df['text'].apply(average_word_length)
-    df['unique_word_count'] = df['text'].apply(unique_word_count)
-    df['sentiment_score_range'] = df['text'].apply(sentiment_score_range)
-    df['noun_phrase_count'] = df['text'].apply(noun_phrase_count)
-    df['verb_phrase_count'] = df['text'].apply(verb_phrase_count)
-    df['named_entity_count'] = df['text'].apply(named_entity_count)
-    df['passive_voice_count'] = df['text'].apply(passive_voice_count)
-    df['active_voice_count'] = df['text'].apply(active_voice_count)
-    df['modal_verbs_count'] = df['text'].apply(modal_verbs_count)
-    df['conditional_sentences_count'] = df['text'].apply(conditional_sentences_count)
-    df['sentence_count'] = df['text'].apply(sentence_count)
-    df['average_sentence_length'] = df['text'].apply(average_sentence_length)
-    df['stop_words_count'] = df['text'].apply(stop_words_count)
-    df['punctuation_diversity'] = df['text'].apply(punctuation_diversity)
+def apply_basic_text_features(df, text_col_name):
+    df[['polarity', 'subjectivity']] = df[text_col_name].apply(lambda x: calculate_sentiment(x)).apply(pd.Series)
+    df['flesch_reading_ease'] = df[text_col_name].apply(lambda x: calculate_readability(x))
+    df['syntactic_complexity'] = df[text_col_name].apply(lambda x: calculate_syntactic_complexity(x))
+    df['lexical_diversity'] = df[text_col_name].apply(lambda x: calculate_lexical_diversity(x))
+    df['text_length'] = df[text_col_name].apply(len)
+    df['question_marks'] = df[text_col_name].apply(count_question_marks)
+    df['exclamation_marks'] = df[text_col_name].apply(count_exclamation_marks)
+    df['avg_word_length'] = df[text_col_name].apply(average_word_length)
+    df['unique_word_count'] = df[text_col_name].apply(unique_word_count)
+    df['sentiment_score_range'] = df[text_col_name].apply(sentiment_score_range)
+    df['noun_phrase_count'] = df[text_col_name].apply(noun_phrase_count)
+    df['verb_phrase_count'] = df[text_col_name].apply(verb_phrase_count)
+    df['named_entity_count'] = df[text_col_name].apply(named_entity_count)
+    df['passive_voice_count'] = df[text_col_name].apply(passive_voice_count)
+    df['active_voice_count'] = df[text_col_name].apply(active_voice_count)
+    df['modal_verbs_count'] = df[text_col_name].apply(modal_verbs_count)
+    df['conditional_sentences_count'] = df[text_col_name].apply(conditional_sentences_count)
+    df['sentence_count'] = df[text_col_name].apply(sentence_count)
+    df['average_sentence_length'] = df[text_col_name].apply(average_sentence_length)
+    df['stop_words_count'] = df[text_col_name].apply(stop_words_count)
+    df['punctuation_diversity'] = df[text_col_name].apply(punctuation_diversity)
     # Adding 35 more features from readability package
-    metrics_df = pd.DataFrame(df['text'].apply(analyze_text_readability).tolist())
+    metrics_df = pd.DataFrame(df[text_col_name].apply(analyze_text_readability).tolist())
     df = df.join(metrics_df)
     return df
 
 
-def apply_LDA(df):
+def apply_LDA(df, text_col_name):
     print(f'preprocessing text for lda')
     # Apply preprocessing to the DataFrame
-    df['processed_LDA_text'] = df['text'].apply(preprocess_text_for_lda)
+    df['processed_LDA_text'] = df[text_col_name].apply(preprocess_text_for_lda)
     print(f'Create a dictionary and corpus for LDA')
     # Create a dictionary and corpus for LDA
     dictionary = corpora.Dictionary(df['processed_LDA_text'])
@@ -210,6 +206,17 @@ def apply_LDA(df):
     print(f'classifying topics')
     df['topic'] = df['processed_LDA_text'].apply(lambda text: assign_topic_lda(text, dictionary, lda_model))
     df.drop(['processed_LDA_text'], axis=1, inplace=True)
+    return df
+
+
+def generic_feature_extraction(path, text_col_name) -> pd.DataFrame:
+    df = pd.read_csv(FILE_PATH)
+
+    # Load spaCy's language model
+    nlp = spacy.load("en_core_web_sm")
+
+    df = apply_basic_text_features(df, text_col_name)
+    df = apply_LDA(df, text_col_name)
     return df
 
 
@@ -226,8 +233,8 @@ if __name__ == '__main__':
     # Load spaCy's language model 
     nlp = spacy.load("en_core_web_sm")
 
-    df = apply_basic_text_features(df)
-    df = apply_LDA(df)
+    df = apply_basic_text_features(df, 'text')
+    df = apply_LDA(df, 'text')
     # df.to_csv('full_dataset_feature_extraction_09-05.csv', Index=False)
     df.to_csv('full_dataset_feature_extraction_09-05.csv')
 
