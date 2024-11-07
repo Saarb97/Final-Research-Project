@@ -164,7 +164,7 @@ def analyze_text_readability(text):
     return flat_result
 
 
-def apply_basic_text_features(df, text_col_name):
+def _apply_basic_text_features(df, text_col_name):
     df[['polarity', 'subjectivity']] = df[text_col_name].apply(lambda x: calculate_sentiment(x)).apply(pd.Series)
     df['flesch_reading_ease'] = df[text_col_name].apply(lambda x: calculate_readability(x))
     df['syntactic_complexity'] = df[text_col_name].apply(lambda x: calculate_syntactic_complexity(x))
@@ -192,7 +192,7 @@ def apply_basic_text_features(df, text_col_name):
     return df
 
 
-def apply_LDA(df, text_col_name):
+def _apply_LDA(df, text_col_name):
     print(f'preprocessing text for lda')
     # Apply preprocessing to the DataFrame
     df['processed_LDA_text'] = df[text_col_name].apply(preprocess_text_for_lda)
@@ -209,20 +209,18 @@ def apply_LDA(df, text_col_name):
     return df
 
 
-def generic_feature_extraction(path, text_col_name) -> pd.DataFrame:
-    df = pd.read_csv(FILE_PATH)
-
+def generic_feature_extraction(df: pd.DataFrame, text_col_name) -> pd.DataFrame:
     # Load spaCy's language model
     nlp = spacy.load("en_core_web_sm")
 
-    df = apply_basic_text_features(df, text_col_name)
-    df = apply_LDA(df, text_col_name)
+    df = _apply_basic_text_features(df, text_col_name)
+    df = _apply_LDA(df, text_col_name)
     return df
 
 
 if __name__ == '__main__':
     '''
-    TODO: feature value standartization
+    TODO: feature value standardization
           check https://doi.org/10.1145/3613904.3641960
                 https://github.com/HLasse/TextDescriptives
     
@@ -233,8 +231,8 @@ if __name__ == '__main__':
     # Load spaCy's language model 
     nlp = spacy.load("en_core_web_sm")
 
-    df = apply_basic_text_features(df, 'text')
-    df = apply_LDA(df, 'text')
+    df = _apply_basic_text_features(df, 'text')
+    df = _apply_LDA(df, 'text')
     # df.to_csv('full_dataset_feature_extraction_09-05.csv', Index=False)
     df.to_csv('full_dataset_feature_extraction_09-05.csv')
 
