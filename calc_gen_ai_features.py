@@ -169,7 +169,7 @@ def process_file_with_classification(file_index, ai_features):
 
     scores_list = []
     for count, text in enumerate(cluster_text):
-        print(f'Processing {count+1}/{len(cluster_text)}')
+        print(f'Processing {count+1}/{len(cluster_text)} of cluster {file_index}')
         start = time.time()
         probabilities = compute_probabilities(text, ai_features)
         # print(f'probabilities: {probabilities}')
@@ -218,6 +218,7 @@ def compute_probabilities(sentence, hypotheses):
 
     return probabilities
 
+
 if __name__ == '__main__':
     print(torch.cuda.is_available())
     print(torch.__version__)
@@ -225,11 +226,18 @@ if __name__ == '__main__':
     clustered_ai_features = pd.read_csv('ai_features2.csv', encoding='ISO-8859-1')
     cols = clustered_ai_features.columns.tolist()
 
-    for i in range(20):
-        cluster_index = str(i)
-        if cluster_index in cols:
-            ai_features = clustered_ai_features[f'{i}'].dropna().tolist()
-            #process_file(i, ai_features)
-            #process_file_dimension_wise(i, ai_features)
-            process_file_with_classification(i, ai_features)
-            print(f"Processing complete for file {i}_data.csv")
+    for col in cols:
+        # Ensure the column name is numeric (if needed) by converting it to int
+        try:
+            cluster_index = int(col)
+            ai_features = clustered_ai_features[col].dropna().tolist()
+
+            # process_file(cluster_index, ai_features)
+            # process_file_dimension_wise(cluster_index, ai_features)
+            process_file_with_classification(cluster_index, ai_features)
+
+            print(f"Processing complete for file {cluster_index}_data.csv")
+
+        except ValueError:
+            # Skip non-numeric columns if they exist
+            print(f"Skipping non-numeric column: {col}")

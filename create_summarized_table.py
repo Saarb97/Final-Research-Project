@@ -68,44 +68,53 @@ def create_cluster_summary_csv(cluster_groups, output_file, textual_cols):
     summary_df.to_csv(output_file, index=False)
 
 
-def _created_statistics_tables(clusters_df, num_clusters, textual_cols, destination):
+def _created_statistics_tables(num_clusters, textual_cols, destination):
     for i in range(num_clusters):  # Loop from 0_data.csv to (num_clusters-1)_data.csv
-        file_name = f'clusters csv\\{i}_data.csv'
-        data_df = load_data(FILE_PATH)
+        file_name = f'{destination}\\{i}_data.csv'
+        data_df = load_data(file_name)
         cluster_groups = group_data_by_cluster(data_df)
         passed_prompts = get_passed_prompts(data_df, textual_cols)
         cluster_dfs = {}
 
         for cluster, group in cluster_groups:
             cluster_dfs[cluster] = process_cluster(group, passed_prompts, textual_cols)
+            cluster_dfs[cluster].to_csv(f'{destination}\\{cluster}_statistics.csv')
 
-        for cluster, df in cluster_dfs.items():
-            df.to_csv(f'clusters csv\\{cluster}_statistics.csv')
+        # for cluster, df in cluster_dfs.items():
+        #     df.to_csv(f'{destination}\\{cluster}_statistics.csv')
 
 def _split_clusters_data(clusters_df, destination):
+    '''
+        TODO: Make it work with Linux as well
+    '''
     cluster_groups = group_data_by_cluster(clusters_df)
-
+    print(len(cluster_groups))
     for cluster, group in cluster_groups:
         group.to_csv(f'{destination}\\{cluster}_data.csv', index=False)
 
-def create_summarized_tables(clusters_df, num_clusters, text_col_name, target_col_name,  destination):
+    return len(cluster_groups)
+
+def create_summarized_tables(clusters_df, text_col_name, target_col_name,  destination):
     '''
         TODO: Make it work with Linux as well
     '''
     # Textual columns are emitted from statistical analysis of their contents.
     textual_cols = [text_col_name, target_col_name, 'cluster', 'named_entities']
 
-    _split_clusters_data(clusters_df, destination)
-    _created_statistics_tables(clusters_df, num_clusters, textual_cols, destination)
+    num_clusters = _split_clusters_data(clusters_df, destination)
+    _created_statistics_tables(num_clusters, textual_cols, destination)
 
 if __name__ == '__main__':
+    '''
+        Local test case
+    '''
     FILE_PATH = "full_dataset_feature_extraction_09-05.csv"
     clusters_df = load_data(FILE_PATH)
     num_clusters = 20
     text_col_name = 'text'
     target_col_name = 'performance'
-    destination = 'C:\\Users\\Saar\\PycharmProjects\\FinalProject\\testfolder'
-    create_summarized_tables(clusters_df, num_clusters, text_col_name, target_col_name, destination)
+    destination = 'testfolder'
+    create_summarized_tables(clusters_df, text_col_name, target_col_name, destination)
 
 
     # FILE_PATH = "full_dataset_feature_extraction_09-05.csv"
