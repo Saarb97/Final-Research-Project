@@ -218,8 +218,47 @@ def compute_probabilities(sentence, hypotheses):
 
     return probabilities
 
+def deberta_for_ai_features(ai_features_file_location: str, data_files_location: str) -> None:
+    print('Torch info for running DeBERTa. Run on GPU')
+    print(torch.cuda.is_available())
+    print(torch.__version__)
+    print(torch.cuda.get_device_name(torch.cuda.current_device()))
+
+    # Can do this more efficiently
+    try:
+        clustered_ai_features, cols = check_ai_features_file(ai_features_file_location)
+
+    except Exception as e:
+        print(e)
+
+    clustered_ai_features = pd.read_csv(ai_features_file_location, encoding='ISO-8859-1')
+    cols = clustered_ai_features.columns.tolist()
+
+
+def check_ai_features_file(ai_features_file_location: str):
+    try:
+        clustered_ai_features = pd.read_csv(ai_features_file_location, encoding='ISO-8859-1')
+        cols = clustered_ai_features.columns.tolist()
+        for col in cols:
+            cluster_index = int(col)
+        return clustered_ai_features, cols
+    except FileNotFoundError:
+        print("Error: File not found. Please check the file path.")
+    except pd.errors.EmptyDataError:
+        print("Error: The file is empty.")
+    except pd.errors.ParserError:
+        print("Error: There was an issue parsing the file. Please check the file format.")
+    except UnicodeDecodeError:
+        print("Error: The file encoding may be incorrect. Try using a different encoding.")
+    except ValueError:
+        print("Error: One of the column names is not an integer and cannot be converted.")
+    except AttributeError:
+        print("Error: Problem with the DataFrame structure.")
+    except Exception as e:
+        print(f"An unexpected error occurred: {e}")
 
 if __name__ == '__main__':
+    print('Torch info for running DeBERTa. Run on GPU')
     print(torch.cuda.is_available())
     print(torch.__version__)
     print(torch.cuda.get_device_name(torch.cuda.current_device()))

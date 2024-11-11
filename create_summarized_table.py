@@ -1,5 +1,6 @@
 import pandas as pd
 from scipy.stats import mannwhitneyu
+import os
 
 
 def load_data(file_path):
@@ -70,7 +71,7 @@ def create_cluster_summary_csv(cluster_groups, output_file, textual_cols):
 
 def _created_statistics_tables(num_clusters, textual_cols, destination):
     for i in range(num_clusters):  # Loop from 0_data.csv to (num_clusters-1)_data.csv
-        file_name = f'{destination}\\{i}_data.csv'
+        file_name = os.path.join(destination, f"{i}_data.csv")
         data_df = load_data(file_name)
         cluster_groups = group_data_by_cluster(data_df)
         passed_prompts = get_passed_prompts(data_df, textual_cols)
@@ -78,19 +79,18 @@ def _created_statistics_tables(num_clusters, textual_cols, destination):
 
         for cluster, group in cluster_groups:
             cluster_dfs[cluster] = process_cluster(group, passed_prompts, textual_cols)
-            cluster_dfs[cluster].to_csv(f'{destination}\\{cluster}_statistics.csv')
+            cluster_file = os.path.join(destination, f"{cluster}_statistics.csv")
+            cluster_dfs[cluster].to_csv(cluster_file)
 
         # for cluster, df in cluster_dfs.items():
         #     df.to_csv(f'{destination}\\{cluster}_statistics.csv')
 
 def _split_clusters_data(clusters_df, destination):
-    '''
-        TODO: Make it work with Linux as well
-    '''
     cluster_groups = group_data_by_cluster(clusters_df)
     print(len(cluster_groups))
     for cluster, group in cluster_groups:
-        group.to_csv(f'{destination}\\{cluster}_data.csv', index=False)
+        filename = os.path.join(destination, f"{cluster}_data.csv")
+        group.to_csv(filename, index=False)
 
     return len(cluster_groups)
 
