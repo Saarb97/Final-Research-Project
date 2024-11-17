@@ -1,4 +1,3 @@
-import pandas as pd
 import numpy as np
 import matplotlib.pyplot as plt
 from xgboost import XGBClassifier
@@ -7,7 +6,6 @@ from sklearn.model_selection import train_test_split, StratifiedKFold, cross_val
 from sklearn.metrics import classification_report, accuracy_score, average_precision_score
 from sklearn.preprocessing import LabelEncoder
 from collections import Counter
-import matplotlib.pyplot as plt
 import seaborn as sns
 import pandas as pd
 from xgboost import XGBClassifier
@@ -22,6 +20,8 @@ import matplotlib.pylab as pl
 import time
 from imblearn.combine import SMOTETomek
 from imblearn.under_sampling import TomekLinks
+import os
+
 
 def load_and_prepare_data(file_name):
     """Load data from a CSV file and prepare it for modeling."""
@@ -33,6 +33,7 @@ def load_and_prepare_data(file_name):
     X = data.drop(columns=['performance'])
     y = data['performance']
     return X, y
+
 
 def train_and_evaluate(X, y):
     """Train the model and evaluate it on the test set, and calculate feature importances."""
@@ -158,6 +159,7 @@ def train_with_smote_kfold(X, y):
     return (avg_accuracy, avg_roc_auc_0, avg_roc_auc_1, reports, avg_feature_importances,
             avg_pr_auc_0, avg_pr_auc_1, avg_global_pr_auc, avg_global_roc_auc)
 
+
 def summarize_results(i, accuracy, report, roc_auc_0, roc_auc_1):
     """Summarize results for output, capturing metrics for both class 0 and class 1."""
     # Extract metrics for each class from the classification report
@@ -178,6 +180,7 @@ def summarize_results(i, accuracy, report, roc_auc_0, roc_auc_1):
         'f1-score_1': class_1_metrics.get('f1-score', 0),
         'support_1': class_1_metrics.get('support', 0)
     }
+
 
 def summarize_results_kfold(i, avg_accuracy, avg_roc_auc_0, avg_roc_auc_1,
                             reports, avg_pr_auc_0, avg_pr_auc_1, avg_global_pr_auc, global_roc_auc):
@@ -217,6 +220,7 @@ def summarize_results_kfold(i, avg_accuracy, avg_roc_auc_0, avg_roc_auc_1,
         'support_1': avg_metrics_1['support']
     }
 
+
 def collect_feature_importances(X_columns, feature_importances, cluster_id):
     """Collect feature importances into a single row for each cluster."""
     # Create a dictionary initializing with the cluster id
@@ -231,6 +235,7 @@ def collect_feature_importances(X_columns, feature_importances, cluster_id):
 def roc_auc_score_minority(y_true, y_pred):
     return roc_auc_score(y_true, y_pred, average=None, labels=[0])
 
+
 def safely_compute_roc_auc(y_true, y_proba, pos_label):
     # Check if both classes are present
     if len(np.unique(y_true)) < 2:
@@ -243,13 +248,14 @@ def safely_compute_pr_auc(y_true, y_proba, pos_label):
         return None  # or another default value if you prefer
     return average_precision_score(y_true == pos_label, y_proba[:, pos_label])
 
-def main_kfold():
+
+def main_kfold(data_files_loc, num_of_clusters, output_loc):
     summary_results = []
     all_feature_importances = []
-    for i in range(20):  # Loop from 0_data.csv to 19_data.csv
+    for i in range(num_of_clusters):  # Loop from 0_data.csv to 19_data.csv
         start = time.time()
         print(f'Cluster {i}')
-        file_name = f'clusters csv\\{i}_data.csv'
+        file_name = os.path.join(data_files_loc, f'{i}_data.csv')
         X, y = load_and_prepare_data(file_name)
         (avg_accuracy, avg_roc_auc_0, avg_roc_auc_1, reports, feature_importances ,
          avg_pr_auc_0, avg_pr_auc_1, avg_global_pr_auc, avg_global_roc_auc) = train_with_smote_kfold(X, y)
@@ -266,13 +272,14 @@ def main_kfold():
 
     # Save all results to a single summary CSV file
     results_df = pd.DataFrame(summary_results)
-    results_df.to_csv('XGBoost\\XGBoost_summary_results.csv', index=False)
+    results_df.to_csv(os.path.join(output_loc, f'XGBoost_summary_results.csv'), index=False)
 
     # Combine all feature importance dictionaries into a single DataFrame and save to CSV
     feature_importances_df = pd.DataFrame(all_feature_importances)
-    feature_importances_df.to_csv('XGBoost\\XGBoost_feature_importances.csv', index=False)
+    feature_importances_df.to_csv(os.path.join(output_loc, f'XGBoost_feature_importances.csv'), index=False)
+
 
 if __name__ == '__main__':
-    main_kfold()
+    main_kfold(f'clusters csv', 20, 'XGBoost')
 
 

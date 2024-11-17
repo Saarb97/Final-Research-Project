@@ -7,8 +7,7 @@ from gensim import corpora, models
 from gensim.utils import simple_preprocess
 import readability
 import nltk
-nltk.download('punkt')
-
+nlp = spacy.load("en_core_web_sm")
 
 def calculate_sentiment(text):
     blob = TextBlob(text)
@@ -167,7 +166,6 @@ def analyze_text_readability(text):
 def _apply_basic_text_features(df, text_col_name):
     print('Applying basic feature extraction...')
     df[['polarity', 'subjectivity']] = df[text_col_name].apply(lambda x: calculate_sentiment(x)).apply(pd.Series)
-    df['flesch_reading_ease'] = df[text_col_name].apply(lambda x: calculate_readability(x))
     df['syntactic_complexity'] = df[text_col_name].apply(lambda x: calculate_syntactic_complexity(x))
     df['lexical_diversity'] = df[text_col_name].apply(lambda x: calculate_lexical_diversity(x))
     df['text_length'] = df[text_col_name].apply(len)
@@ -188,6 +186,7 @@ def _apply_basic_text_features(df, text_col_name):
     df['stop_words_count'] = df[text_col_name].apply(stop_words_count)
     df['punctuation_diversity'] = df[text_col_name].apply(punctuation_diversity)
     # Adding 35 more features from readability package
+    print(f'Applying readability lib features..')
     metrics_df = pd.DataFrame(df[text_col_name].apply(analyze_text_readability).tolist())
     df = df.join(metrics_df)
     return df
@@ -211,8 +210,7 @@ def _apply_LDA(df, text_col_name):
 
 
 def generic_feature_extraction(df: pd.DataFrame, text_col_name) -> pd.DataFrame:
-    # Load spaCy's language model
-    nlp = spacy.load("en_core_web_sm")
+    nltk.download('punkt')
 
     df = _apply_basic_text_features(df, text_col_name)
     df = _apply_LDA(df, text_col_name)
@@ -226,6 +224,7 @@ if __name__ == '__main__':
                 https://github.com/HLasse/TextDescriptives
     
     '''
+    nltk.download('punkt')
     FILE_PATH = "all_clustering_09_05.csv"
     df = pd.read_csv(FILE_PATH)
 

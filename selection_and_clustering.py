@@ -1,10 +1,7 @@
 from typing import Any
 
-import numpy as np
 import pandas as pd
-from numpy import ndarray, dtype, signedinteger, long
 from sklearn.ensemble._iforest import _average_path_length
-import numpy as np
 import multiprocessing
 from functools import partial
 from sklearn.ensemble import IsolationForest

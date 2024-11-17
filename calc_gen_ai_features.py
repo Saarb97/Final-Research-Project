@@ -154,7 +154,7 @@ def classify_sentence(sentence, ai_features):
     return concept_scores
 
 
-def process_file_with_classification(file_index, ai_features, data_files_location):
+def _process_file_with_classification(file_index, ai_features, data_files_location):
     """Process a single file, compute scores, and concatenate results."""
     file_name = os.path.join(data_files_location, f'{file_index}_data.csv')
     data = pd.read_csv(file_name)
@@ -164,7 +164,7 @@ def process_file_with_classification(file_index, ai_features, data_files_locatio
     for count, text in enumerate(cluster_text):
         print(f'Processing {count + 1}/{len(cluster_text)} of cluster {file_index}')
         start = time.time()
-        probabilities = compute_probabilities(text, ai_features)
+        probabilities = _compute_probabilities(text, ai_features)
         scores_list.append(probabilities)
         end = time.time()
         elapsed = end - start
@@ -180,7 +180,7 @@ def process_file_with_classification(file_index, ai_features, data_files_locatio
     print(f'Finished processing cluster {file_index}')
 
 
-def compute_probabilities(sentence, hypotheses):
+def _compute_probabilities(sentence, hypotheses):
     """
     Computes probabilities for a sentence and a list of hypotheses.
     In this case - relevance scores of the hypotheses texts to the sentence.
@@ -232,9 +232,9 @@ def _check_ai_features_file(ai_features_file_location: str):
 
 def deberta_for_llm_features(ai_features_file_location: str, data_files_location: str) -> None:
     print('Torch info for running DeBERTa. Run on GPU')
-    print(torch.cuda.is_available())
-    print(torch.__version__)
-    print(torch.cuda.get_device_name(torch.cuda.current_device()))
+    print(f'Is CUDA available? {torch.cuda.is_available()}')
+    print(f'Torch version: {torch.__version__}')
+    print(f'Torch Device: {torch.cuda.get_device_name(torch.cuda.current_device())}')
 
     try:
         clustered_ai_features, cols = _check_ai_features_file(ai_features_file_location)
@@ -242,7 +242,7 @@ def deberta_for_llm_features(ai_features_file_location: str, data_files_location
         for col in cols:
             try:
                 ai_features = clustered_ai_features[col].dropna().tolist()
-                process_file_with_classification(col, ai_features, data_files_location)
+                _process_file_with_classification(col, ai_features, data_files_location)
                 print(f"Processing complete for file {col}_data.csv")
             except ValueError:
                 # Skip non-numeric columns if they exist
@@ -267,7 +267,7 @@ if __name__ == '__main__':
 
             # process_file(cluster_index, ai_features)
             # process_file_dimension_wise(cluster_index, ai_features)
-            process_file_with_classification(cluster_index, ai_features, 'clusters csv')
+            _process_file_with_classification(cluster_index, ai_features, 'clusters csv')
 
             print(f"Processing complete for file {cluster_index}_data.csv")
 

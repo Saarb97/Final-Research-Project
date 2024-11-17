@@ -35,9 +35,14 @@ def calculate_statistical_significance(group, passed_prompts,  textual_cols):
     u_stats = []
     p_vals = []
     for col in group.drop(textual_cols, axis=1).columns:
-        u_stat, p_val = mannwhitneyu(group[col], passed_prompts[col], alternative='two-sided')
-        u_stats.append(u_stat)
-        p_vals.append(p_val)
+        try:
+            u_stat, p_val = mannwhitneyu(group[col], passed_prompts[col], alternative='two-sided')
+            u_stats.append(u_stat)
+            p_vals.append(p_val)
+        except Exception as e:
+            print(f'Error calculating mannwhitneyu for column {col}: {e}')
+            u_stat, p_val = None, None
+
     return u_stats, p_vals
 
 
@@ -85,7 +90,8 @@ def _created_statistics_tables(num_clusters, textual_cols, destination):
         # for cluster, df in cluster_dfs.items():
         #     df.to_csv(f'{destination}\\{cluster}_statistics.csv')
 
-def _split_clusters_data(clusters_df, destination):
+
+def split_clusters_data(clusters_df, destination) -> int:
     cluster_groups = group_data_by_cluster(clusters_df)
     print(len(cluster_groups))
     for cluster, group in cluster_groups:
@@ -94,14 +100,9 @@ def _split_clusters_data(clusters_df, destination):
 
     return len(cluster_groups)
 
-def create_summarized_tables(clusters_df, text_col_name, target_col_name,  destination):
-    '''
-        TODO: Make it work with Linux as well
-    '''
+def create_summarized_tables(clusters_df, text_col_name, target_col_name,  destination, num_clusters):
     # Textual columns are emitted from statistical analysis of their contents.
-    textual_cols = [text_col_name, target_col_name, 'cluster', 'named_entities']
-
-    num_clusters = _split_clusters_data(clusters_df, destination)
+    textual_cols = [text_col_name, target_col_name, 'cluster']
     _created_statistics_tables(num_clusters, textual_cols, destination)
 
 if __name__ == '__main__':
@@ -114,7 +115,7 @@ if __name__ == '__main__':
     text_col_name = 'text'
     target_col_name = 'performance'
     destination = 'testfolder'
-    create_summarized_tables(clusters_df, text_col_name, target_col_name, destination)
+    create_summarized_tables(clusters_df, text_col_name, target_col_name, destination, num_clusters)
 
 
     # FILE_PATH = "full_dataset_feature_extraction_09-05.csv"
