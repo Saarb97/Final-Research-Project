@@ -13,11 +13,11 @@ print(f'Using device: {device}')
 # Load the zero-shot classification pipeline
 classifier = pipeline("zero-shot-classification", model="MoritzLaurer/deberta-v3-large-zeroshot-v2.0")
 
-bnb_config = BitsAndBytesConfig(
-    load_in_4bit=True,
-    bnb_4bit_quant_type="nf4",
-    bnb_4bit_compute_dtype=torch.float16,
-)
+# bnb_config = BitsAndBytesConfig(
+#     load_in_4bit=True,
+#     bnb_4bit_quant_type="nf4",
+#     bnb_4bit_compute_dtype=torch.float16,
+# )
 
 #
 nli_model = AutoModelForSequenceClassification.from_pretrained(
@@ -208,10 +208,12 @@ def _compute_probabilities(sentence, hypotheses):
 
 def _check_ai_features_file(ai_features_file_location: str):
     try:
-        clustered_ai_features = pd.read_csv(ai_features_file_location, encoding='ISO-8859-1')
+        # clustered_ai_features = pd.read_csv(ai_features_file_location, encoding='ISO-8859-1')
+        clustered_ai_features = pd.read_csv(ai_features_file_location)
         # Validate that all column headers are integers
         cols = clustered_ai_features.columns.tolist()
         for col in cols:
+            print(col)
             int(col)  # Will raise ValueError if conversion fails
 
         return clustered_ai_features, cols
@@ -234,10 +236,12 @@ def deberta_for_llm_features(ai_features_file_location: str, data_files_location
     print('Torch info for running DeBERTa. Run on GPU')
     print(f'Is CUDA available? {torch.cuda.is_available()}')
     print(f'Torch version: {torch.__version__}')
-    print(f'Torch Device: {torch.cuda.get_device_name(torch.cuda.current_device())}')
+    # print(f'Torch Device: {torch.cuda.get_device_name(torch.cuda.current_device())}')
 
     try:
         clustered_ai_features, cols = _check_ai_features_file(ai_features_file_location)
+        print(clustered_ai_features.head())
+        print(cols)
         # Iterating through the clusters
         for col in cols:
             try:
@@ -255,22 +259,28 @@ if __name__ == '__main__':
     print('Torch info for running DeBERTa. Run on GPU')
     print(torch.cuda.is_available())
     print(torch.__version__)
-    print(torch.cuda.get_device_name(torch.cuda.current_device()))
+#    print(torch.cuda.get_device_name(torch.cuda.current_device()))
     clustered_ai_features = pd.read_csv('ai_features2.csv', encoding='ISO-8859-1')
     cols = clustered_ai_features.columns.tolist()
 
-    for col in cols:
-        # Ensure the column name is numeric (if needed) by converting it to int
-        try:
-            cluster_index = int(col)
-            ai_features = clustered_ai_features[col].dropna().tolist()
+    print('start')
+    ai_features_loc = 'clustered_ai_features.csv'
+    destination = 'clusters csv'
+    deberta_for_llm_features(ai_features_loc, destination)
 
-            # process_file(cluster_index, ai_features)
-            # process_file_dimension_wise(cluster_index, ai_features)
-            _process_file_with_classification(cluster_index, ai_features, 'clusters csv')
-
-            print(f"Processing complete for file {cluster_index}_data.csv")
-
-        except ValueError:
-            # Skip non-numeric columns if they exist
-            print(f"Skipping non-numeric column: {col}")
+    #
+    # for col in cols:
+    #     # Ensure the column name is numeric (if needed) by converting it to int
+    #     try:
+    #         cluster_index = int(col)
+    #         ai_features = clustered_ai_features[col].dropna().tolist()
+    #
+    #         # process_file(cluster_index, ai_features)
+    #         # process_file_dimension_wise(cluster_index, ai_features)
+    #         _process_file_with_classification(cluster_index, ai_features, 'clusters csv')
+    #
+    #         print(f"Processing complete for file {cluster_index}_data.csv")
+    #
+    #     except ValueError:
+    #         # Skip non-numeric columns if they exist
+    #         print(f"Skipping non-numeric column: {col}")

@@ -97,8 +97,10 @@ def calc_statistical_information(data_df, test_type):
     return median_df
 
 def run_logistic_regression(X, y, num_of_features):
+    # should experiment with 'lbfgs' solver
     log_reg = LogisticRegression(max_iter=10000, solver='saga').fit(X, y)
 
+    # y is a binary hence location [0]
     coefficients = log_reg.coef_[0]
     intercept = log_reg.intercept_[0]
 
@@ -127,36 +129,63 @@ def run_logistic_regression(X, y, num_of_features):
 
     return sorted_features
 
-if __name__ == '__main__':
 
-    for i in range(20):  # Loop from 0_data.csv to 19_data.csv
+def analyse_results(results_folder_location: str, num_of_clusters: int, destination: str) -> None:
+    for i in range(num_of_clusters):  # Loop from 0_data.csv to (num_of_clusters - 1)_data.csv
         print(f'Cluster {i}')
-        data_file_name = f'clusters csv\\{i}_data.csv'
-        statistics_file_name = f'clusters csv\\{i}_statistics.csv'
+        data_file_name = os.path.join(results_folder_location, f'{file_index}_data.csv')
         data_df = load_and_prepare_data(data_file_name)
-        statistics_df = pd.read_csv(statistics_file_name)
 
         test_types = ['t-test', 'Mann-Whitney U test']
         median_df = calc_statistical_information(data_df, test_types[1])
 
-        # Display the combined DataFrame
-        #print(median_df)
-        #median_df.to_csv(f'clusters csv\\{i}_results_analysis.csv', index=True)
-
         # Filter the significant features
         significant_features = median_df.columns[median_df.loc['significant'] == 1]
-        # print(significant_features)
+
         # Separate features and target
         X = data_df[significant_features]
         y = data_df['performance']
 
         num_of_features = 10
         statistical_important_features = run_logistic_regression(X, y, num_of_features)
-        statistical_important_features.to_csv(f'results\\{i}_statistical.csv', index=False)
+        statistical_important_features.to_csv(os.path.join(destination, f'{i}_statistical.csv'), index=False)
 
         shap_feature_importance = get_shap_feature_importance(data_file_name).head(num_of_features)
-        #print(shap_feature_importance)
-        shap_feature_importance.to_csv(f'results\\{i}_shap.csv', index=False)
+        shap_feature_importance.to_csv(os.path.join(destination,f'{i}_shap.csv'), index=False)
+
+
+if __name__ == '__main__':
+
+    analyse_results(f'clusters csv',20,f'results')
+
+    # for i in range(20):  # Loop from 0_data.csv to 19_data.csv
+    #     print(f'Cluster {i}')
+    #     data_file_name = f'clusters csv\\{i}_data.csv'
+    #     statistics_file_name = f'clusters csv\\{i}_statistics.csv'
+    #     data_df = load_and_prepare_data(data_file_name)
+    #     statistics_df = pd.read_csv(statistics_file_name)
+    #
+    #     test_types = ['t-test', 'Mann-Whitney U test']
+    #     median_df = calc_statistical_information(data_df, test_types[1])
+    #
+    #     # Display the combined DataFrame
+    #     #print(median_df)
+    #     #median_df.to_csv(f'clusters csv\\{i}_results_analysis.csv', index=True)
+    #
+    #     # Filter the significant features
+    #     significant_features = median_df.columns[median_df.loc['significant'] == 1]
+    #     # print(significant_features)
+    #     # Separate features and target
+    #     X = data_df[significant_features]
+    #     y = data_df['performance']
+    #
+    #     num_of_features = 10
+    #     statistical_important_features = run_logistic_regression(X, y, num_of_features)
+    #     statistical_important_features.to_csv(f'results\\{i}_statistical.csv', index=False)
+    #
+    #     shap_feature_importance = get_shap_feature_importance(data_file_name).head(num_of_features)
+    #     #print(shap_feature_importance)
+    #     shap_feature_importance.to_csv(f'results\\{i}_shap.csv', index=False)
 
 
 
