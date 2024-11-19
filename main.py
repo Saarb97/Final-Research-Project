@@ -99,6 +99,10 @@ def main():
     elapsed = round(end - start)
     print(f'time for running analysis on the results of each cluster: {elapsed} seconds')
 
+    end = time.time()
+    elapsed = round(end - start_whole)
+    print(f'time for whole process: {elapsed} seconds')
+
 if __name__ == '__main__':
     main()
 
