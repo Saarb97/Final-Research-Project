@@ -5,6 +5,7 @@ import numpy as np
 from xgboost_clusters import train_xgboost_with_SMOTE
 from sklearn.model_selection import train_test_split
 import shap
+import os
 
 def load_and_prepare_data(file_name):
     """Load data from a CSV file and prepare it for modeling."""
@@ -156,7 +157,7 @@ def analyse_results(results_folder_location: str, num_of_clusters: int, destinat
 
 if __name__ == '__main__':
 
-    analyse_results(f'clusters csv',20,f'results')
+    analyse_results(f'clusters csv', 20,f'results')
 
     # for i in range(20):  # Loop from 0_data.csv to 19_data.csv
     #     print(f'Cluster {i}')

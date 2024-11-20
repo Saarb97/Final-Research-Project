@@ -1,5 +1,6 @@
 import create_summarized_table
 import feature_extraction
+import result_analysis
 import xgboost_clusters
 from create_summarized_table import *
 from calc_gen_ai_features import *
@@ -8,7 +9,6 @@ import os
 import sys
 import subprocess
 from xgboost_clusters import *
-from result_analysis import *
 
 def _ensure_spacy_model():
     try:
@@ -57,6 +57,12 @@ def main():
 
     # If destination folder for files doesn't exist / cannot be created / user chose to abort.
     if not _check_and_create_folder(clusters_files_loc):
+        sys.exit()
+
+    if not _check_and_create_folder(xgboost_files_loc):
+        sys.exit()
+
+    if not _check_and_create_folder(results_files_loc):
         sys.exit()
 
     ai_features_loc = 'clustered_ai_features.csv'
