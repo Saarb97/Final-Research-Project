@@ -7,6 +7,7 @@ from gensim import corpora, models
 from gensim.utils import simple_preprocess
 import readability
 import nltk
+import multiprocessing as mp
 nlp = spacy.load("en_core_web_sm")
 
 def calculate_sentiment(text):
@@ -215,6 +216,32 @@ def generic_feature_extraction(df: pd.DataFrame, text_col_name) -> pd.DataFrame:
     df = _apply_basic_text_features(df, text_col_name)
     df = _apply_LDA(df, text_col_name)
     return df
+
+
+def generic_feature_extraction_chunk(chunk: pd.DataFrame, text_col_name) -> pd.DataFrame:
+    # Function to process a single chunk
+    chunk = _apply_basic_text_features(chunk, text_col_name)
+    return chunk
+
+
+def generic_feature_extraction_parallel(df: pd.DataFrame, text_col_name, n_jobs=4) -> pd.DataFrame:
+    nltk.download('punkt')
+
+    # Split the DataFrame into chunks
+    chunks = np.array_split(df, n_jobs)
+
+    # Create a pool of workers
+    with mp.Pool(n_jobs) as pool:
+        # Process each chunk in parallel
+        results = pool.starmap(generic_feature_extraction_chunk, [(chunk, text_col_name) for chunk in chunks])
+
+    # Combine all processed chunks into a single DataFrame
+    # Re-index to maintain the original order
+    result_df = pd.concat(results).sort_index()
+
+    # Run LDA
+    result_df = _apply_LDA(result_df, text_col_name)
+    return result_df
 
 
 if __name__ == '__main__':
