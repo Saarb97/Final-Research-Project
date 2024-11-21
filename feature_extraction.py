@@ -155,6 +155,11 @@ def punctuation_diversity(text):
     return len(set(punctuations))
 
 
+def initialize_nltk():
+    import nltk
+    nltk.download('punkt', quiet=True)
+
+
 def analyze_text_readability(text):
     result = readability.getmeasures(text)
     flat_result = {}
@@ -163,6 +168,17 @@ def analyze_text_readability(text):
             flat_result[f"{main_key}__{sub_key}"] = value
     return flat_result
 
+def analyze_text_readability_safe(text):
+    try:
+        return analyze_text_readability(text)
+    except Exception as e:
+        print(f"Error analyzing readability for text: {text[:50]}... Error: {e}")
+        return {}
+
+# To make sure readability resources are not shared between workers.
+def analyze_text_readability_worker(chunk, text_col_name):
+    import readability  # Ensure the library is imported in the worker
+    return chunk[text_col_name].apply(analyze_text_readability)
 
 def _apply_basic_text_features(df, text_col_name):
     print('Applying basic feature extraction...')
@@ -188,8 +204,10 @@ def _apply_basic_text_features(df, text_col_name):
     df['punctuation_diversity'] = df[text_col_name].apply(punctuation_diversity)
     # Adding 35 more features from readability package
     print(f'Applying readability lib features..')
-    metrics_df = pd.DataFrame(df[text_col_name].apply(analyze_text_readability).tolist())
-    df = df.join(metrics_df)
+    metrics_df = pd.DataFrame(df[text_col_name].apply(analyze_text_readability_safe).tolist())
+
+    metrics_df = metrics_df.reset_index(drop=True)
+    df = df.reset_index(drop=True).join(metrics_df)
     return df
 
 
@@ -200,10 +218,13 @@ def _apply_LDA(df, text_col_name):
     print(f'Create a dictionary and corpus for LDA')
     # Create a dictionary and corpus for LDA
     dictionary = corpora.Dictionary(df['processed_LDA_text'])
+
+    # remove low-frequency words, high-frequency stop words, and overly common words that add noise.
+    dictionary.filter_extremes(no_below=5, no_above=0.5)
     corpus = [dictionary.doc2bow(text) for text in df['processed_LDA_text']]
     print(f'Train the LDA model')
     # Train the LDA model
-    lda_model = models.LdaMulticore(corpus, num_topics=100, id2word=dictionary, passes=50)
+    lda_model = models.LdaMulticore(corpus, num_topics=100, id2word=dictionary, passes=50, chunksize=2000)
     print(f'classifying topics')
     df['topic'] = df['processed_LDA_text'].apply(lambda text: assign_topic_lda(text, dictionary, lda_model))
     df.drop(['processed_LDA_text'], axis=1, inplace=True)
@@ -219,25 +240,26 @@ def generic_feature_extraction(df: pd.DataFrame, text_col_name) -> pd.DataFrame:
 
 
 def generic_feature_extraction_chunk(chunk: pd.DataFrame, text_col_name) -> pd.DataFrame:
-    # Function to process a single chunk
-    chunk = _apply_basic_text_features(chunk, text_col_name)
-    return chunk
+    try:
+        return _apply_basic_text_features(chunk, text_col_name)
+    except Exception as e:
+        print(f"Error processing chunk: {e}")
+        return pd.DataFrame()
 
 
 def generic_feature_extraction_parallel(df: pd.DataFrame, text_col_name, n_jobs=4) -> pd.DataFrame:
-    nltk.download('punkt')
-
     # Split the DataFrame into chunks
+    n_jobs = min(mp.cpu_count(), n_jobs)
     chunks = np.array_split(df, n_jobs)
 
     # Create a pool of workers
-    with mp.Pool(n_jobs) as pool:
+    with mp.Pool(n_jobs, initializer=initialize_nltk) as pool:
         # Process each chunk in parallel
         results = pool.starmap(generic_feature_extraction_chunk, [(chunk, text_col_name) for chunk in chunks])
 
     # Combine all processed chunks into a single DataFrame
-    # Re-index to maintain the original order
-    result_df = pd.concat(results).sort_index()
+    result_df = pd.concat(results).reset_index(drop=True)
+    result_df.index = df.index  # Restore original indexing
 
     # Run LDA
     result_df = _apply_LDA(result_df, text_col_name)
@@ -251,14 +273,18 @@ if __name__ == '__main__':
                 https://github.com/HLasse/TextDescriptives
     
     '''
-    nltk.download('punkt')
+    # nltk.download('punkt')
+    # FILE_PATH = "all_clustering_09_05.csv"
+    # df = pd.read_csv(FILE_PATH)
+    #
+    # # Load spaCy's language model
+    # nlp = spacy.load("en_core_web_sm")
+    #
+    # df = _apply_basic_text_features(df, 'text')
+    # df = _apply_LDA(df, 'text')
+    # df.to_csv('full_dataset_feature_extraction_09-05.csv')
+
     FILE_PATH = "all_clustering_09_05.csv"
     df = pd.read_csv(FILE_PATH)
-
-    # Load spaCy's language model 
-    nlp = spacy.load("en_core_web_sm")
-
-    df = _apply_basic_text_features(df, 'text')
-    df = _apply_LDA(df, 'text')
-    df.to_csv('full_dataset_feature_extraction_09-05.csv')
+    generic_feature_extraction_parallel(df, text_col_name='text', n_jobs=12)
 
