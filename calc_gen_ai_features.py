@@ -215,7 +215,7 @@ def _process_file_with_classification(file_index, ai_features, data_files_locati
     # Save the result back to the original CSV file
     result_df.to_csv(file_name, index=False)
     end = time.time()
-    print(f'Finished processing cluster {file_index}, took {end - start:.2f}s')
+    print(f'Finished processing cluster {file_index} in {end - start:.2f}s')
 
 
 def _compute_probabilities(sentences, hypotheses):
