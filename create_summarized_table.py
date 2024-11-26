@@ -109,13 +109,15 @@ if __name__ == '__main__':
     '''
         Local test case
     '''
-    FILE_PATH = "full_dataset_feature_extraction_09-05.csv"
+    FILE_PATH = "twitter_clustering24_11_24.csv"
     clusters_df = load_data(FILE_PATH)
-    num_clusters = 20
+    num_clusters = 25
     text_col_name = 'text'
-    target_col_name = 'performance'
-    destination = 'testfolder'
-    create_summarized_tables(clusters_df, text_col_name, target_col_name, destination, num_clusters)
+    target_col_name = 'text'
+    destination = 'testfolder2'
+    split_clusters_data(clusters_df, destination)
+    # create_summarized_tables(clusters_df, text_col_name, target_col_name, destination, num_clusters)
+
 
 
     # FILE_PATH = "full_dataset_feature_extraction_09-05.csv"

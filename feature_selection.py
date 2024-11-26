@@ -7,10 +7,14 @@ import time
 def load_and_prepare_data(file_name):
     """Load data from a CSV file and prepare it for modeling."""
     data = pd.read_csv(file_name)
-    try:
-        data.drop(columns=['text', 'cluster', 'named_entities', 'Unnamed: 0'], inplace=True)  # Drop non-numeric or unnecessary columns
-    except:
-        data.drop(columns=['text', 'cluster', 'Unnamed: 0'], inplace=True)  # Drop non-numeric or unnecessary columns
+
+    # Define the columns to drop before analysing results
+    columns_to_drop = ['text', 'cluster', 'named_entities', 'Unnamed: 0']
+
+    # Filter columns that exist in the data
+    existing_columns_to_drop = [col for col in columns_to_drop if col in data.columns]
+    data.drop(columns=existing_columns_to_drop, inplace=True)
+
     X = data.drop(columns=['performance'])
     y = data['performance']
     return X, y

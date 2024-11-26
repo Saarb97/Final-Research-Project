@@ -11,15 +11,17 @@ import subprocess
 from xgboost_clusters import *
 import argparse
 import re
+import cProfile
 
 
 def clean_text_column(df, text_col_name='text'):
     """Clean the text column by removing rows with empty text while retaining specific symbols (!, ?, .)."""
     # Drop rows with missing or empty text
+    start_len = len(df)
     df = df[df[text_col_name].notnull()]  # Remove NaN values
     df = df[df[text_col_name].str.strip().astype(bool)]  # Remove empty strings
 
-    # Clean text by removing unusual symbols except !, ?, .
+    # Clean text by removing unusual symbols, non english text, except !, ?, .
     def clean_text(text):
         text = text.lower()  # Convert to lowercase
         text = re.sub(r'[^a-zA-Z0-9\s!?.,]', '', text)  # Remove non-alphanumeric characters except !, ?, .
@@ -28,10 +30,19 @@ def clean_text_column(df, text_col_name='text'):
 
     df[text_col_name] = df[text_col_name].apply(clean_text)
 
-    # Remove rows that became empty after cleaning
-    df = df[df[text_col_name].astype(bool)]  # Ensure text is not empty
+    # Define a function to filter out rows with insufficient content
+    def has_valid_content(text):
+        # Remove rows that only contain symbols like !, ?, or .
+        if re.fullmatch(r'[!?.,\s]*', text):
+            return False
+        return True
 
+    # Apply the filter
+    df = df[df[text_col_name].apply(has_valid_content)]
+    cur_len = len(df)
+    print(f"Clean dataset's text. started with {start_len} rows, after cleaning: {cur_len}")
     return df
+
 
 def _count_cluster_files(clusters_files_loc):
     # Match files with the pattern "<cluster>_data.csv"
@@ -40,6 +51,7 @@ def _count_cluster_files(clusters_files_loc):
         if os.path.isfile(os.path.join(clusters_files_loc, f)) and f.endswith("_data.csv")
     ]
     return len(cluster_files)
+
 
 def _ensure_spacy_model():
     try:
@@ -86,7 +98,7 @@ def main():
     clusters_files_loc = 'testfolder2'
     xgboost_files_loc = os.path.join(clusters_files_loc, 'xgboost_files')
     results_files_loc = os.path.join(clusters_files_loc, 'results')
-
+    ai_features_loc = 'clustered_ai_features.csv'
 
     # If destination folder for files doesn't exist / cannot be created / user chose to abort.
     if not _check_and_create_folder(clusters_files_loc):
@@ -98,7 +110,7 @@ def main():
     if not _check_and_create_folder(results_files_loc):
         sys.exit()
 
-    ai_features_loc = 'clustered_ai_features.csv'
+
 
     # Argument parsing for step control
     parser = argparse.ArgumentParser(description="Run pipeline from a specific step.")
