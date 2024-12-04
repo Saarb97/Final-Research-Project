@@ -5,14 +5,18 @@ import numpy as np
 from xgboost_clusters import train_xgboost_with_SMOTE
 from sklearn.model_selection import train_test_split
 import shap
+import os
 
 def load_and_prepare_data(file_name):
     """Load data from a CSV file and prepare it for modeling."""
     data = pd.read_csv(file_name)
-    try:
-        data.drop(columns=['text', 'cluster', 'named_entities', 'Unnamed: 0'], inplace=True)  # Drop non-numeric or unnecessary columns
-    except:
-        data.drop(columns=['text', 'cluster', 'Unnamed: 0'], inplace=True)  # Drop non-numeric or unnecessary columns
+
+    # Define the columns to drop before analysing results
+    columns_to_drop = ['text', 'cluster', 'named_entities', 'Unnamed: 0']
+
+    # Filter columns that exist in the data
+    existing_columns_to_drop = [col for col in columns_to_drop if col in data.columns]
+    data.drop(columns=existing_columns_to_drop, inplace=True)
     return data
 
 def train_and_evaluate(X, y):
@@ -122,41 +126,47 @@ def run_logistic_regression(X, y, num_of_features):
     sorted_features = feature_effects.sort_values(by='Probability Increase (%)').head(num_of_features)
     sorted_features['Probability Increase (%)'] = sorted_features['Probability Increase (%)'].abs()
 
-    for index, row in sorted_features.iterrows():
-        if row['Probability Increase (%)'] > 2:
-            print(
-                f"A sample with high indication of {row['Feature']} has {abs(row['Probability Increase (%)']):.2f}% higher chance to be in class 0.")
+    # for index, row in sorted_features.iterrows():
+    #     if row['Probability Increase (%)'] > 2:
+    #         print(
+    #             f"A sample with high indication of {row['Feature']} has {abs(row['Probability Increase (%)']):.2f}% higher chance to be in class 0.")
 
     return sorted_features
 
 
 def analyse_results(results_folder_location: str, num_of_clusters: int, destination: str) -> None:
     for i in range(num_of_clusters):  # Loop from 0_data.csv to (num_of_clusters - 1)_data.csv
-        print(f'Cluster {i}')
-        data_file_name = os.path.join(results_folder_location, f'{file_index}_data.csv')
-        data_df = load_and_prepare_data(data_file_name)
+        print(f'Cluster {i} out of {num_of_clusters} analysis began')
+        try:
+            data_file_name = os.path.join(results_folder_location, f'{i}_data.csv')
+            data_df = load_and_prepare_data(data_file_name)
 
-        test_types = ['t-test', 'Mann-Whitney U test']
-        median_df = calc_statistical_information(data_df, test_types[1])
+            test_types = ['t-test', 'Mann-Whitney U test']
+            median_df = calc_statistical_information(data_df, test_types[1])
 
-        # Filter the significant features
-        significant_features = median_df.columns[median_df.loc['significant'] == 1]
+            # Filter the significant features
+            significant_features = median_df.columns[median_df.loc['significant'] == 1]
 
-        # Separate features and target
-        X = data_df[significant_features]
-        y = data_df['performance']
+            # Separate features and target
+            X = data_df[significant_features]
+            y = data_df['performance']
 
-        num_of_features = 10
-        statistical_important_features = run_logistic_regression(X, y, num_of_features)
-        statistical_important_features.to_csv(os.path.join(destination, f'{i}_statistical.csv'), index=False)
+            num_of_features = 10
+            statistical_important_features = run_logistic_regression(X, y, num_of_features)
+            statistical_important_features.to_csv(os.path.join(destination, f'{i}_statistical.csv'), index=False)
 
-        shap_feature_importance = get_shap_feature_importance(data_file_name).head(num_of_features)
-        shap_feature_importance.to_csv(os.path.join(destination,f'{i}_shap.csv'), index=False)
+            shap_feature_importance = get_shap_feature_importance(data_file_name).head(num_of_features)
+            shap_feature_importance.to_csv(os.path.join(destination,f'{i}_shap.csv'), index=False)
+        except Exception as e:
+            print(f'Error analysing results for cluster {i}: {e}')
+            print(f'Error could be from very imbalanced cluster.')
+            print(f'skipping cluster {i}.')
+            continue
 
 
 if __name__ == '__main__':
 
-    analyse_results(f'clusters csv',20,f'results')
+    analyse_results(f'clusters csv', 20,f'results')
 
     # for i in range(20):  # Loop from 0_data.csv to 19_data.csv
     #     print(f'Cluster {i}')

@@ -17,6 +17,30 @@ from sklearn.model_selection import GridSearchCV
 from sklearn.base import BaseEstimator, ClusterMixin
 from sklearn.metrics import silhouette_score, make_scorer
 from sklearn.decomposition import PCA
+import os
+from sklearn.preprocessing import LabelEncoder
+
+
+def convert_text_to_numeric(df, column_name):
+    """
+    Convert a textual categorical column into numerical categories.
+
+    Args:
+        df (pd.DataFrame): The input DataFrame.
+        column_name (str): The name of the column to convert.
+
+    Returns:
+        pd.DataFrame: A DataFrame with the column transformed into numerical categories.
+    """
+    # Ensure the column exists in the DataFrame
+    if column_name not in df.columns:
+        raise ValueError(f"Column '{column_name}' does not exist in the DataFrame.")
+
+    # Use LabelEncoder to transform the column
+    encoder = LabelEncoder()
+    df[column_name] = encoder.fit_transform(df[column_name])
+
+    return df, encoder.classes_
 
 
 class MeanShiftEstimator(BaseEstimator, ClusterMixin):
@@ -371,7 +395,16 @@ def read_data(file_path):
 
 def run_icalingam(data):
     print('Starting ICALiNGAM')
-    df_selection = data.drop(columns=['text', 'performance'])
+
+    # Define the columns to drop before analysing results
+    columns_to_drop = ['text', 'performance', 'named_entities', 'Unnamed: 0']
+
+    # Filter columns that exist in the data
+    existing_columns_to_drop = [col for col in columns_to_drop if col in data.columns]
+    data.drop(columns=existing_columns_to_drop, inplace=True)
+    df_selection = data
+
+
     columns = range(len(df_selection.columns))
     feature_importance = []
     for i in range((len(columns) // 100) + 1):
@@ -451,7 +484,7 @@ def visualize_clusters(data, predictions, file_name):
     plt.close()
 
 
-def get_feature_selection_indices(path, text_col_name, target_col_name):
+def get_feature_selection_indices(path):
     df = read_data(path)
     indices = run_icalingam(df)
     return indices
@@ -477,19 +510,28 @@ def selection_and_clustering(path):
 def save_df_to_csv(df, file_name):
     df.to_csv(file_name, index=False)
 
-if __name__ == '__main__':
-    FILE_PATH = "fairness_bbq_dataset_with_embeddings.csv"
-    df = read_data(FILE_PATH)
-    indices = run_icalingam(df)
-    best_bandwidth = find_best_bandwidth(df, indices)
-    # indices = run_icalingam_v2(df)
-    predictions = cluster_data(df, indices, best_bandwidth)
 
-    post_selection_df = df[['text', 'performance']].copy()
+if __name__ == '__main__':
+    # FILE_PATH = "fairness_bbq_dataset_with_embeddings.csv"
+    FILE_PATH = os.path.join('testfolder2', 'test_feature_extraction_file.csv')
+    df = read_data(FILE_PATH)
+    df, class_mapping = convert_text_to_numeric(df, 'category')
+    print(df)
+    print("Class Mapping:", class_mapping)
+    df_copy = df.copy()
+    indices = run_icalingam(df_copy)
+    df_copy = df.copy()
+    best_bandwidth = find_best_bandwidth(df_copy, indices)
+    # indices = run_icalingam_v2(df)
+    df_copy = df.copy()
+    predictions = cluster_data(df_copy, indices, best_bandwidth)
+
+    post_selection_df = df[['text', 'category']].copy()
+    # post_selection_df = df[['text', 'performance']].copy()
     post_selection_df.loc[:, 'cluster'] = predictions
     cluster_col = post_selection_df.pop('cluster')
     post_selection_df.insert(2, 'cluster', cluster_col)
 
-    #save_df_to_csv(post_selection_df, 'all_clustering_25_07.csv')
+    save_df_to_csv(post_selection_df, 'twitter_clustering24_11_24.csv')
     df_for_clustering = df.iloc[:, list(indices)]
     visualize_clusters(df_for_clustering, predictions, 'cluster_visualization.png')

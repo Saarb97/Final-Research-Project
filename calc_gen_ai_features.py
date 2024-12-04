@@ -6,6 +6,10 @@ from transformers import AutoModelForSequenceClassification, AutoTokenizer, Bits
 import time
 import torch
 import os
+from multiprocessing import Pool, cpu_count
+from torch.utils.data import DataLoader, Dataset
+from torch.multiprocessing import Pool, set_start_method
+from itertools import chain
 
 device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 print(f'Using device: {device}')
@@ -27,8 +31,11 @@ nli_model = AutoModelForSequenceClassification.from_pretrained(
 )
 
 nli_model.to(device)
-
 tokenizer = AutoTokenizer.from_pretrained("MoritzLaurer/deberta-v3-large-zeroshot-v2.0")
+
+def collate_fn(batch):
+    sentences, hypotheses = zip(*batch)
+    return list(sentences), hypotheses
 
 # Old experiment - Load SBERT model
 #model = SentenceTransformer('all-mpnet-base-v2')
@@ -154,21 +161,51 @@ def classify_sentence(sentence, ai_features):
     return concept_scores
 
 
+class TextDataset(Dataset):
+    def __init__(self, sentences, hypotheses):
+        self.sentences = sentences
+        self.hypotheses = hypotheses
+
+    def __len__(self):
+        return len(self.sentences)
+
+    def __getitem__(self, idx):
+        return self.sentences[idx], self.hypotheses
+
+
+# Parallel File Processing
+def process_single_file(args):
+    return _process_file_with_classification(*args)
+
+
+def parallel_process_files(file_indices, ai_features, data_files_location):
+    """Parallelize processing of multiple files."""
+
+    for file_index in file_indices:
+        _process_file_with_classification(file_index, ai_features, data_files_location)
+
+    # pool = Pool(processes=min(cpu_count(), 2))  # Use 2 CPU cores
+    # tasks = [(index, ai_features, data_files_location) for index in file_indices]
+    # pool.map(process_single_file, tasks)
+    # pool.close()
+    # pool.join()
+
 def _process_file_with_classification(file_index, ai_features, data_files_location):
-    """Process a single file, compute scores, and concatenate results."""
+    """Process a single file, compute scores, and save results."""
     file_name = os.path.join(data_files_location, f'{file_index}_data.csv')
     data = pd.read_csv(file_name)
-    cluster_text = data['text']
+    cluster_text = data['text'].fillna('').astype(str).tolist() # TODO update 'text' to generic term
+
+    start = time.time()
+    # Create DataLoader for batching
+    dataset = TextDataset(cluster_text, ai_features)
+    dataloader = DataLoader(dataset, batch_size=2, shuffle=False, collate_fn=collate_fn)
 
     scores_list = []
-    for count, text in enumerate(cluster_text):
-        print(f'Processing {count + 1}/{len(cluster_text)} of cluster {file_index}')
-        start = time.time()
-        probabilities = _compute_probabilities(text, ai_features)
-        scores_list.append(probabilities)
-        end = time.time()
-        elapsed = end - start
-        print(f'elapsed time: {elapsed}')
+    for batch_sentences, batch_hypotheses in dataloader:
+        # print(f'Processing batch of size {len(batch_sentences)} in cluster {file_index}')
+        probabilities = _compute_probabilities(batch_sentences, batch_hypotheses)
+        scores_list.extend(probabilities)
 
     # Convert the list of scores to a DataFrame
     scores_df = pd.DataFrame(scores_list)
@@ -177,33 +214,52 @@ def _process_file_with_classification(file_index, ai_features, data_files_locati
     result_df = pd.concat([data, scores_df], axis=1)
     # Save the result back to the original CSV file
     result_df.to_csv(file_name, index=False)
-    print(f'Finished processing cluster {file_index}')
+    end = time.time()
+    print(f'Finished processing cluster {file_index} in {end - start:.2f}s')
 
 
-def _compute_probabilities(sentence, hypotheses):
+def _compute_probabilities(sentences, hypotheses):
     """
-    Computes probabilities for a sentence and a list of hypotheses.
-    In this case - relevance scores of the hypotheses texts to the sentence.
-
-    Args:
-    sentence (str): The premise sentence.
-    hypotheses (list): A list of hypothesis strings.
-
-    Returns:
-    dict: A dictionary with hypotheses as keys and their corresponding probabilities as values.
+    Computes probabilities for a batch of sentences and hypotheses.
     """
-    probabilities = {}
-    for hypothesis in hypotheses:
-        inputs = (tokenizer.encode(sentence, hypothesis, return_tensors='pt', truncation_strategy='only_first')
-                  .to(device))
+    # Ensure hypotheses is a flat list of strings
+    if isinstance(hypotheses[0], list):
+        from itertools import chain
+        hypotheses = list(chain.from_iterable(hypotheses))
 
-        logits = nli_model(inputs)[0]
-        entail_contradiction_logits = logits[:, [0, 1]]
-        probs = entail_contradiction_logits.softmax(dim=1)
-        prob_hypothesis_true = probs[:, 1].item()
-        probabilities[hypothesis] = prob_hypothesis_true
+    if not all(isinstance(hypothesis, str) for hypothesis in hypotheses):
+        raise ValueError(f"Invalid hypotheses structure: {hypotheses}")
+
+    # Tokenize in batch
+    try:
+        inputs = tokenizer(
+            [sentence for sentence in sentences for _ in hypotheses],
+            hypotheses * len(sentences),
+            return_tensors='pt',
+            truncation=True,
+            padding=True
+        ).to(device)
+    except Exception as e:
+        print("Error during tokenization.")
+        print("Sentences:", sentences)
+        print("Hypotheses:", hypotheses)
+        raise e
+
+    # Perform inference
+    with torch.no_grad():
+        logits = nli_model(**inputs).logits
+
+    # Extract probabilities
+    entail_contradiction_logits = logits[:, [0, 1]]
+    probs = entail_contradiction_logits.softmax(dim=1)
+    probs_hypothesis_true = probs[:, 1].view(len(sentences), -1).tolist()
+
+    probabilities = []
+    for i, sentence in enumerate(sentences):
+        probabilities.append(dict(zip(hypotheses, probs_hypothesis_true[i])))
 
     return probabilities
+
 
 
 def _check_ai_features_file(ai_features_file_location: str):
@@ -213,7 +269,6 @@ def _check_ai_features_file(ai_features_file_location: str):
         # Validate that all column headers are integers
         cols = clustered_ai_features.columns.tolist()
         for col in cols:
-            print(col)
             int(col)  # Will raise ValueError if conversion fails
 
         return clustered_ai_features, cols
@@ -233,6 +288,7 @@ def _check_ai_features_file(ai_features_file_location: str):
 
 
 def deberta_for_llm_features(ai_features_file_location: str, data_files_location: str) -> None:
+    set_start_method("spawn", force=True)
     print('Torch info for running DeBERTa. Run on GPU')
     print(f'Is CUDA available? {torch.cuda.is_available()}')
     print(f'Torch version: {torch.__version__}')
@@ -240,17 +296,20 @@ def deberta_for_llm_features(ai_features_file_location: str, data_files_location
 
     try:
         clustered_ai_features, cols = _check_ai_features_file(ai_features_file_location)
-        print(clustered_ai_features.head())
-        print(cols)
-        # Iterating through the clusters
+        # Prepare tasks for parallel processing
+        tasks = []
         for col in cols:
             try:
+                start = time.time()
                 ai_features = clustered_ai_features[col].dropna().tolist()
-                _process_file_with_classification(col, ai_features, data_files_location)
-                print(f"Processing complete for file {col}_data.csv")
+                tasks.append((col, ai_features, data_files_location))
             except ValueError:
                 # Skip non-numeric columns if they exist
-                print(f"Skipping non-numeric column: {col}")
+                print(f"non-numeric cluster number in ai features file: {col}, exiting")
+                exit(1)
+
+        # Parallelize file processing
+        parallel_process_files([task[0] for task in tasks], ai_features, data_files_location)
     except Exception as e:
         print(e)
 
@@ -264,9 +323,12 @@ if __name__ == '__main__':
     cols = clustered_ai_features.columns.tolist()
 
     print('start')
+    start = time.time()
     ai_features_loc = 'clustered_ai_features.csv'
     destination = 'clusters csv'
     deberta_for_llm_features(ai_features_loc, destination)
+    end = time.time()
+    print(f'Finished processing all clusters, took {end - start:.2f}s')
 
     #
     # for col in cols:
