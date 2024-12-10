@@ -93,7 +93,7 @@ def _created_statistics_tables(num_clusters, textual_cols, destination):
 
 def split_clusters_data(clusters_df, destination) -> int:
     cluster_groups = group_data_by_cluster(clusters_df)
-    print(len(cluster_groups))
+    print(f"Amount of cluster files created: {len(cluster_groups)}")
     for cluster, group in cluster_groups:
         filename = os.path.join(destination, f"{cluster}_data.csv")
         group.to_csv(filename, index=False)

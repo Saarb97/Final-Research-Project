@@ -6,6 +6,38 @@ import tiktoken
 import os
 import dspy
 
+
+class SubthemeExtraction(dspy.Signature):
+    """Extract exactly 25 distinct subthemes from the provided text."""
+    instruction: str = dspy.InputField(desc="The instruction.")
+    texts: str = dspy.InputField(desc="The texts to analyze.")
+    # Output field: The themes and subthemes as a nested dictionary
+    themes: dict[str, list[str]] = dspy.OutputField(
+        desc=(
+            "A dictionary where each key is a main theme (as a string), and the value is a list of five "
+            "specific subthemes related to that theme. Exactly five themes are required, and each theme must have exactly five subthemes."
+        ),
+        validator=lambda themes: (
+                isinstance(themes, dict) and
+                len(themes) == 5 and
+                all(len(subthemes) == 5 for subthemes in themes.values())
+        )
+    )
+
+    # Implement the Module
+
+
+class SubthemeExtractor(dspy.Module):
+    signature = SubthemeExtraction
+
+    def __init__(self):
+        super().__init__()
+        self.chain_of_thought = dspy.ChainOfThoughtWithHint(SubthemeExtraction)
+
+    def forward(self, texts, instruction):
+        return self.chain_of_thought(texts=texts, instruction=instruction)
+
+
 def _count_cluster_files(clusters_files_loc: str):
     # Match files with the pattern "<cluster>_data.csv"
     cluster_files = [
@@ -35,6 +67,13 @@ def _create_cluster_prompt(prompt: str, text_file_loc: str, text_col_name: str, 
     # Add cluster texts to the prompt
     full_prompt += f"\nCluster texts:\n" + '\n'.join(cluster_text.astype(str))
 
+    return full_prompt
+
+
+def _create_texts_string(text_file_loc, text_col_name = 'text'):
+    data = pd.read_csv(text_file_loc)
+    cluster_text = data[text_col_name]
+    full_prompt = '\n'.join(cluster_text.astype(str))
     return full_prompt
 
 
@@ -196,15 +235,81 @@ def llm_feature_extraction_for_clusters_folder(client, clusters_files_loc: str, 
         print(f"generated features successfully for {num_of_clusters} clusters.")
     return llm_features_pd
 
+
+def llm_feature_extraction_for_cluster_csv_dspy(lm: dspy.LM, text_file_loc, text_col_name, model="gpt-4o-mini"):
+    # Token limit set for gpt 4/o/o1/o-mini/o1-mini (including output)
+    TOKEN_LIMIT_PER_PROMPT = 128_000
+
+    instruction = (
+        "Analyze this series of stories and questions to identify exactly five main recurring themes. "
+        "These themes should comprehensively reflect patterns in characters' actions, traits, and dynamics, "
+        "capturing both explicit and subtle ideas across the scenarios. "
+        "After identifying the five main themes, expand on each theme by identifying exactly five specific and coherent subthemes "
+        "that provide more detail and depth. Ensure each theme is accompanied by precisely five subthemes, with no overlaps or omissions. "
+        "Do not skip or summarize steps, and ensure the output strictly adheres to the required structure."
+    )
+
+    texts = _create_texts_string(text_file_loc, text_col_name)
+
+    token_count = _count_tokens(texts, model)
+    token_count += _count_tokens(instruction, model)
+    if token_count > TOKEN_LIMIT_PER_PROMPT:
+        print(f"Cluster at {text_file_loc} is too large for {model} context window of {TOKEN_LIMIT_PER_PROMPT} "
+              f"with {token_count} tokens.")
+
+    extractor = SubthemeExtractor()
+    result = extractor(texts=texts, instruction=instruction)
+
+    sub_themes = []
+    for key, value_list in result.themes.items():
+        sub_themes.extend(value_list)
+    return sub_themes
+
+
+def llm_feature_extraction_for_clusters_folder_dspy(lm: dspy.LM, clusters_files_loc: str, text_col_name: str,
+                                               model: str = "gpt-4o-mini") -> pd.DataFrame:
+
+    num_of_clusters = _count_cluster_files(clusters_files_loc)
+    llm_features_pd = pd.DataFrame()
+
+    # Loop through all clusters from 0_data.csv to (num_of_clusters - 1)_data.csv
+    for i in range(num_of_clusters):
+        cluster_file = os.path.join(clusters_files_loc, f"{i}_data.csv")  # Construct file name
+        try:
+            features = llm_feature_extraction_for_cluster_csv_dspy(lm, cluster_file, text_col_name, model)
+            # llm_features_pd[f"{i}"] = features
+            temp_df = pd.DataFrame({f"{i}": features})
+            # Concatenate with the main DataFrame, aligning indexes and allowing for NaN values
+            llm_features_pd = pd.concat([llm_features_pd, temp_df], axis=1)
+
+        except Exception as e:
+            raise(f"Error processing cluster {i}: {e}")
+
+    if len(llm_features_pd.columns) == 0:
+        raise Exception(f"No features were generated for all clusters.")
+    elif num_of_clusters != len(llm_features_pd.columns):
+        print(f"generated features for {len(llm_features_pd.columns)} clusters out of {num_of_clusters} clusters.")
+    else:
+        print(f"generated features successfully for {num_of_clusters} clusters.")
+    return llm_features_pd
+
+
 if __name__ == '__main__':
     text_file_loc = 'clusters csv'
     text_col_name = 'text'
 
-    api_key = "INSERT API KEY"
+    api_key = ('API-KEY-HERE')
     client = OpenAI(api_key=api_key)
 
     # features = llm_feature_extraction_for_cluster_csv(client, text_file_loc, text_col_name)
     # print(features)
-    features_pd = llm_feature_extraction_for_clusters_folder(client, text_file_loc, text_col_name, model="gpt-4o-mini")
-    ai_features_file_name = os.path.join(text_file_loc, 'ai_features_df.csv')
+    # features_pd = llm_feature_extraction_for_clusters_folder(client, text_file_loc, text_col_name, model="gpt-4o-mini")
+
+    lm = dspy.LM('openai/gpt-4o-mini',
+                 api_key='API-KEY-HERE',
+                 cache=False)
+    dspy.configure(lm=lm)
+    features_pd = llm_feature_extraction_for_clusters_folder_dspy(lm, text_file_loc, text_col_name, model="gpt-4o-mini")
+
+    ai_features_file_name = os.path.join(text_file_loc, 'ai_features_df2.csv')
     features_pd.to_csv(ai_features_file_name, index=False)

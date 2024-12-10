@@ -2,6 +2,7 @@ import create_summarized_table
 import feature_extraction
 import result_analysis
 import xgboost_clusters
+import llm_api_feature_extraction
 from create_summarized_table import *
 from calc_gen_ai_features import *
 import time
@@ -12,6 +13,7 @@ from xgboost_clusters import *
 import argparse
 import re
 import cProfile
+import dspy
 
 
 def clean_text_column(df, text_col_name='text'):
@@ -68,12 +70,14 @@ def _ensure_spacy_model():
         except subprocess.CalledProcessError as e:
             print(f"An error occurred while installing the 'en_core_web_sm' model: {e}")
 
+
 def _check_and_create_folder(folder_path):
     if os.path.exists(folder_path):
         return True
     else:
         while True:
-            response = input(f"The folder '{folder_path}' does not exist. Do you want to create it? (Y/N): ").strip().lower()
+            response = input(
+                f"The folder '{folder_path}' does not exist. Do you want to create it? (Y/N): ").strip().lower()
             if response == 'y':
                 try:
                     os.makedirs(folder_path)
@@ -88,6 +92,7 @@ def _check_and_create_folder(folder_path):
             else:
                 print("Invalid response. Please reply with 'Y' or 'N'.")
 
+
 def main():
     # Runs only on scipy==1.12 because of gensim requirement of deprecated function
     # if missing 'en_core_web_sm' -  python -m spacy download en_core_web_sm
@@ -95,9 +100,10 @@ def main():
 
     _ensure_spacy_model()
 
-    clusters_files_loc = 'testfolder2'
+    clusters_files_loc = 'testfolder3'
     xgboost_files_loc = os.path.join(clusters_files_loc, 'xgboost_files')
     results_files_loc = os.path.join(clusters_files_loc, 'results')
+    text_col_name = 'text'
     ai_features_loc = 'clustered_ai_features.csv'
 
     # If destination folder for files doesn't exist / cannot be created / user chose to abort.
@@ -109,8 +115,6 @@ def main():
 
     if not _check_and_create_folder(results_files_loc):
         sys.exit()
-
-
 
     # Argument parsing for step control
     parser = argparse.ArgumentParser(description="Run pipeline from a specific step.")
@@ -133,13 +137,12 @@ def main():
         print("Starting from Step 1: Feature Extraction")
         start = time.time()
         df = load_data('all_clustering_09_05.csv')
-        df = load_data(os.path.join('twitter sentiment', 'twitter_training.csv'))
-        print(df.head)
+        # df = load_data(os.path.join('twitter sentiment', 'twitter_clustering24_11_24.csv'))
 
         # Clean text column
-        df = clean_text_column(df, 'text')
+        df = clean_text_column(df, text_col_name)
 
-        df_with_features = feature_extraction.generic_feature_extraction_parallel(df, 'text', 4)
+        df_with_features = feature_extraction.generic_feature_extraction_parallel(df, text_col_name, 4)
         df_with_features.to_csv(os.path.join(clusters_files_loc, 'test_feature_extraction_file.csv'), index=False)
         elapsed = round(time.time() - start)
         print(f'Time for basic feature extraction: {elapsed} seconds')
@@ -158,19 +161,37 @@ def main():
         print("Skipping Step 2: Using precomputed clusters")
         num_of_clusters = _count_cluster_files(clusters_files_loc)
 
-    # LLM Feature Extraction
-    ########################################################################################
-
-    # Step 3: DeBERTa for LLM features
+    # Step 3: extracting LLM features from Open AI's GPT model
     if start_step <= 3:
+        print("Step 3: extracting LLM features from Open AI's GPT model")
+        start = time.time()
+        lm = dspy.LM('openai/gpt-4o-mini',
+                     api_key='sk-proj-OLH3SWBpavds9jB7PNoajCEB6AzkbLA9zgE1lA_wzhEhwHw5cRdonq2ruhxMGsa4gLnZfzOaXAT3BlbkFJ8'
+                             '6kNF3bbfokVYlRweTnT78AVNfz3ehY4-sAw7A5kiveK7RgEjr8_oel8PuCfwJUcfbnmWUJs0A',
+                     cache=False)
+        dspy.configure(lm=lm)
+        llm_features_pd = (llm_api_feature_extraction.
+                           llm_feature_extraction_for_clusters_folder_dspy(lm, clusters_files_loc, text_col_name,
+                                                                           model="gpt-4o-mini"))
+
+        ai_features_file_name = os.path.join(clusters_files_loc, 'llm_features_per_cluster.csv')
+        llm_features_pd.to_csv(ai_features_file_name, index=False)
+        elapsed = round(time.time() - start)
+        print(f'Time for running DeBERTa on LLM features: {elapsed} seconds')
+    else:
+        print("Skipping Step 3: Assuming llm features file already exists.")
+        ai_features_file_name = os.path.join(clusters_files_loc, 'ai_features_per_cluster.csv')
+
+    # Step 4: DeBERTa for LLM features
+    if start_step <= 4:
         print("Step 3: DeBERTa for LLM features")
         start = time.time()
-        deberta_for_llm_features(ai_features_loc, clusters_files_loc)
+        deberta_for_llm_features(ai_features_file_name, clusters_files_loc)
         elapsed = round(time.time() - start)
         print(f'Time for running DeBERTa on LLM features: {elapsed} seconds')
 
-    # Step 4: Summarized tables creation
-    if start_step <= 4:
+    # Step 5: Summarized tables creation
+    if start_step <= 5:
         print("Step 4: Summarized Tables Creation")
         start = time.time()
         create_summarized_table.create_summarized_tables(df_with_features, 'text', 'performance', clusters_files_loc,
@@ -178,26 +199,25 @@ def main():
         elapsed = round(time.time() - start)
         print(f'Time for summarized table creation: {elapsed} seconds')
 
-    # Step 5: XGBoost models
-    if start_step <= 5:
+    # Step 6: XGBoost models
+    if start_step <= 6:
         print("Step 5: XGBoost Models")
         start = time.time()
         xgboost_clusters.main_kfold(clusters_files_loc, num_of_clusters, xgboost_files_loc)
         elapsed = round(time.time() - start)
         print(f'Time for running XGBoost models: {elapsed} seconds')
 
-    # Step 6: Result analysis
-    if start_step <= 6:
+    # Step 7: Result analysis
+    if start_step <= 7:
         print("Step 6: Result Analysis")
         start = time.time()
         result_analysis.analyse_results(clusters_files_loc, num_of_clusters, results_files_loc)
         elapsed = round(time.time() - start)
         print(f'Time for result analysis: {elapsed} seconds')
 
-
     elapsed = round(time.time() - start_whole)
     print(f'time for whole process: {elapsed} seconds')
 
+
 if __name__ == '__main__':
     main()
-
