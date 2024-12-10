@@ -24,8 +24,6 @@ class SubthemeExtraction(dspy.Signature):
         )
     )
 
-    # Implement the Module
-
 
 class SubthemeExtractor(dspy.Module):
     signature = SubthemeExtraction
@@ -76,7 +74,7 @@ def _create_texts_string(text_file_loc, text_col_name = 'text'):
     full_prompt = '\n'.join(cluster_text.astype(str))
     return full_prompt
 
-
+# direct GPT prompting - Unused
 def _get_subthemes(client: OpenAI, full_prompt: str, model: str="gpt-4o-mini"):
     response = client.chat.completions.create(
         model=model,  # Replace with your model
@@ -123,7 +121,7 @@ def _get_subthemes(client: OpenAI, full_prompt: str, model: str="gpt-4o-mini"):
     print(f'subthemes amount received: {len(subthemes)}')
     return subthemes
 
-
+# direct GPT prompting - Unused
 def llm_feature_extraction_for_cluster_csv(client: OpenAI, text_file_loc, text_col_name, model="gpt-4o-mini"):
 
     first_stage_instruction = (
@@ -207,7 +205,7 @@ def llm_feature_extraction_for_cluster_csv(client: OpenAI, text_file_loc, text_c
 
     return sub_themes
 
-
+# direct GPT prompting - Unused
 def llm_feature_extraction_for_clusters_folder(client, clusters_files_loc: str, text_col_name: str,
                                                model: str = "gpt-4o-mini") -> pd.DataFrame:
 
