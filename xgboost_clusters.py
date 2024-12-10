@@ -74,7 +74,7 @@ def train_with_smote_kfold(X, y):
     accuracies = []
     global_pr_aucs = []
     global_roc_aucs = []
-    global_f1_score = []
+    weighted_f1_scores = []  # Changed from global_f1_score
     roc_aucs_0 = []
     roc_aucs_1 = []
     pr_aucs_0 = []
@@ -110,7 +110,6 @@ def train_with_smote_kfold(X, y):
         #Train XGBoost classifier using the best params found in GridSearchCV
         model = XGBClassifier(use_label_encoder=False, eval_metric='logloss',**gsearch.best_params_)
         '''
-
         model = train_xgboost_with_SMOTE(X_train, y_train)
 
         # Predictions and Evaluation
@@ -124,7 +123,14 @@ def train_with_smote_kfold(X, y):
         else:
             global_roc_auc = None
 
+        # Classification report
         report = classification_report(y_test, y_pred, output_dict=True, zero_division=0)
+
+        # Compute weighted F1-score
+        f1_scores = [report[str(cls)]['f1-score'] for cls in np.unique(y_test)]
+        supports = [report[str(cls)]['support'] for cls in np.unique(y_test)]
+        weighted_f1 = sum(f1 * support for f1, support in zip(f1_scores, supports)) / sum(supports)
+        weighted_f1_scores.append(weighted_f1)
 
         roc_auc_0 = safely_compute_roc_auc(y_test, y_proba, 0)  # ROC AUC for class 0
         roc_auc_1 = safely_compute_roc_auc(y_test, y_proba, 1)  # ROC AUC for class 1
@@ -142,10 +148,11 @@ def train_with_smote_kfold(X, y):
         reports.append(report)
         feature_importances.append(model.feature_importances_)
 
-    # Calculate average of the metrics
+        # Calculate average of the metrics
     avg_accuracy = np.mean(accuracies)
     avg_global_pr_auc = np.mean(global_pr_aucs)
     avg_global_roc_auc = np.mean(global_roc_aucs)
+    avg_weighted_f1_score = np.mean(weighted_f1_scores)  # Average weighted F1-score
     roc_aucs_0 = [i for i in roc_aucs_0 if i is not None]
     roc_aucs_1 = [i for i in roc_aucs_1 if i is not None]
     pr_aucs_0 = [i for i in pr_aucs_0 if i is not None]
@@ -157,7 +164,7 @@ def train_with_smote_kfold(X, y):
     avg_feature_importances = np.mean(feature_importances, axis=0)
 
     return (avg_accuracy, avg_roc_auc_0, avg_roc_auc_1, reports, avg_feature_importances,
-            avg_pr_auc_0, avg_pr_auc_1, avg_global_pr_auc, avg_global_roc_auc)
+            avg_pr_auc_0, avg_pr_auc_1, avg_global_pr_auc, avg_global_roc_auc, avg_weighted_f1_score)
 
 
 def summarize_results(i, accuracy, report, roc_auc_0, roc_auc_1):
@@ -183,7 +190,7 @@ def summarize_results(i, accuracy, report, roc_auc_0, roc_auc_1):
 
 
 def summarize_results_kfold(i, avg_accuracy, avg_roc_auc_0, avg_roc_auc_1,
-                            reports, avg_pr_auc_0, avg_pr_auc_1, avg_global_pr_auc, global_roc_auc):
+                            reports, avg_pr_auc_0, avg_pr_auc_1, avg_global_pr_auc, global_roc_auc, avg_weighted_f1_score):
     """Summarize results for output, capturing averaged metrics for both class 0 and class 1."""
     # Initialize dictionaries to sum metrics for averaging
     metrics_0 = {'precision': 0, 'recall': 0, 'f1-score': 0, 'support': 0}
@@ -208,6 +215,7 @@ def summarize_results_kfold(i, avg_accuracy, avg_roc_auc_0, avg_roc_auc_1,
         'overall_accuracy': avg_accuracy,
         'average_global_pr_auc': avg_global_pr_auc,
         'average_global_roc_auc': global_roc_auc,
+        'average_weighted_f1_score': avg_weighted_f1_score,
         'precision_0': avg_metrics_0['precision'],
         'recall_0': avg_metrics_0['recall'],
         'pr_auc_0': avg_pr_auc_0,
@@ -258,9 +266,10 @@ def main_kfold(data_files_loc, num_of_clusters, output_loc):
         file_name = os.path.join(data_files_loc, f'{i}_data.csv')
         X, y = load_and_prepare_data(file_name)
         (avg_accuracy, avg_roc_auc_0, avg_roc_auc_1, reports, feature_importances ,
-         avg_pr_auc_0, avg_pr_auc_1, avg_global_pr_auc, avg_global_roc_auc) = train_with_smote_kfold(X, y)
+         avg_pr_auc_0, avg_pr_auc_1, avg_global_pr_auc,
+         avg_global_roc_auc, avg_weighted_f1_score) = train_with_smote_kfold(X, y)
         result = summarize_results_kfold(i, avg_accuracy, avg_roc_auc_0, avg_roc_auc_1,
-                                         reports, avg_pr_auc_0, avg_pr_auc_1, avg_global_pr_auc, avg_global_roc_auc)
+                                         reports, avg_pr_auc_0, avg_pr_auc_1, avg_global_pr_auc, avg_global_roc_auc, avg_weighted_f1_score)
         summary_results.append(result)
         # Collect feature importances into a single dictionary for each cluster
         feature_importance_dict = collect_feature_importances(X.columns, feature_importances, i)
