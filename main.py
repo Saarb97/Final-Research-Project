@@ -37,6 +37,9 @@ def clean_text_column(df, text_col_name='text'):
         # Remove rows that only contain symbols like !, ?, or .
         if re.fullmatch(r'[!?.,\s]*', text):
             return False
+        # Removes rows with less than 4 chars
+        if len(text.strip()) < 4:
+            return False
         return True
 
     # Apply the filter
@@ -93,9 +96,8 @@ def _check_and_create_folder(folder_path):
                 print("Invalid response. Please reply with 'Y' or 'N'.")
 
 
-def main():
+def main(openai_api_key):
     # Runs only on scipy==1.12 because of gensim requirement of deprecated function
-    # if missing 'en_core_web_sm' -  python -m spacy download en_core_web_sm
     VALID_STEPS = range(1, 7)  # Steps 1 to 6
 
     _ensure_spacy_model()
@@ -166,8 +168,7 @@ def main():
         print("Step 3: extracting LLM features from Open AI's GPT model")
         start = time.time()
         lm = dspy.LM('openai/gpt-4o-mini',
-                     api_key='sk-proj-OLH3SWBpavds9jB7PNoajCEB6AzkbLA9zgE1lA_wzhEhwHw5cRdonq2ruhxMGsa4gLnZfzOaXAT3BlbkFJ8'
-                             '6kNF3bbfokVYlRweTnT78AVNfz3ehY4-sAw7A5kiveK7RgEjr8_oel8PuCfwJUcfbnmWUJs0A',
+                     api_key=openai_api_key,
                      cache=False)
         dspy.configure(lm=lm)
         llm_features_pd = (llm_api_feature_extraction.
@@ -220,4 +221,5 @@ def main():
 
 
 if __name__ == '__main__':
-    main()
+    openai_api_key = ''
+    main(openai_api_key)

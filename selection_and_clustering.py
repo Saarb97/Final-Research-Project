@@ -467,7 +467,6 @@ def cluster_data(data, indices, bandwidth):
     # kmean_model = MiniBatchKMeans(n_clusters=20, batch_size=100).fit(df_for_clustering)
     # return kmean_model.predict(df_for_clustering)
     mean_shift_model = MeanShift(bandwidth=bandwidth).fit(df_for_clustering)
-    # min_bin_freq
     return mean_shift_model.predict(df_for_clustering)
 
 
