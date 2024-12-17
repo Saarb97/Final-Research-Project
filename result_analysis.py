@@ -31,7 +31,10 @@ def get_shap_feature_importance(data_file_name):
     y = data['performance']
     model = train_and_evaluate(X, y)
 
-    explainer = shap.TreeExplainer(model)
+    # Raw log odds feature importance
+    # explainer = shap.TreeExplainer(model)
+    # Probability impact
+    explainer = shap.TreeExplainer(model, model_output='probability', feature_perturbation="interventional", data=X)
     shap_values = explainer.shap_values(X)
 
     # Get model predictions
@@ -46,7 +49,7 @@ def get_shap_feature_importance(data_file_name):
     # Get the corresponding SHAP values for the samples predicted as class 0
     class_0_shap_values = shap_values[class_0_indices]
 
-    # Calculate median absolute SHAP values for each feature
+    # Calculate median SHAP values for each feature
     class_0_median_shap_values = np.median(class_0_shap_values, axis=0)
     shap_importance_df = pd.DataFrame({
         'Feature': X.columns,
