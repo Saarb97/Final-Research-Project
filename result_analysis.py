@@ -32,9 +32,9 @@ def get_shap_feature_importance(data_file_name):
     model = train_and_evaluate(X, y)
 
     # Raw log odds feature importance
-    # explainer = shap.TreeExplainer(model)
+    explainer = shap.TreeExplainer(model)
     # Probability impact
-    explainer = shap.TreeExplainer(model, model_output='probability', feature_perturbation="interventional", data=X)
+    # explainer = shap.TreeExplainer(model, model_output='probability', feature_perturbation="interventional", data=X)
     shap_values = explainer.shap_values(X)
 
     # Get model predictions
@@ -199,7 +199,3 @@ if __name__ == '__main__':
     #     shap_feature_importance = get_shap_feature_importance(data_file_name).head(num_of_features)
     #     #print(shap_feature_importance)
     #     shap_feature_importance.to_csv(f'results\\{i}_shap.csv', index=False)
-
-
-
-
