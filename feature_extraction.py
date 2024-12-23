@@ -17,10 +17,6 @@ def calculate_sentiment(text):
     return blob.sentiment.polarity, blob.sentiment.subjectivity
 
 
-def calculate_readability(text):
-    return textstat.flesch_reading_ease(text)
-
-
 def calculate_syntactic_complexity(text):
     doc = nlp(text)
     sentence_lengths = [len(sent) for sent in doc.sents]
