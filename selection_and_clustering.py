@@ -19,6 +19,7 @@ from sklearn.metrics import silhouette_score, make_scorer
 from sklearn.decomposition import PCA
 import os
 from sklearn.preprocessing import LabelEncoder
+import tqdm
 
 
 def convert_text_to_numeric(df, column_name):
@@ -354,24 +355,37 @@ def plot_elbow_method(data, k_range, output_file_path):
     # plt.figure(figsize=(8, 4))
     # plt.plot(k_range, distortions, 'bx-')
 
+    """
+    Plots the Elbow method graph and saves it as an image file with progress tracking using tqdm.
+
+    Parameters:
+    - data: The input data for clustering.
+    - k_range: A range of values for k to be tested.
+    - output_file_path: The path where the plot image will be saved.
+    """
     distortions = []
     inertias = []
     mapping1 = {}
     mapping2 = {}
 
+    print("Starting the elbow method...")
+
     for k in k_range:
+        print(f'fitting k={k} for elbow method')
         # Building and fitting the model
-        kmeanModel = MiniBatchKMeans(n_clusters=k, batch_size=100)
+        kmeanModel = MiniBatchKMeans(n_clusters=k, batch_size=1024, random_state=42)
         kmeanModel.fit(data)
 
-        distortions.append(sum(np.min(cdist(data, kmeanModel.cluster_centers_,
-                                            'euclidean'), axis=1)) / data.shape[0])
+        # Calculating distortions and inertias
+        distortions.append(
+            sum(np.min(cdist(data, kmeanModel.cluster_centers_, 'euclidean'), axis=1)) / data.shape[0]
+        )
         inertias.append(kmeanModel.inertia_)
 
-        mapping1[k] = sum(np.min(cdist(data, kmeanModel.cluster_centers_,
-                                       'euclidean'), axis=1)) / data.shape[0]
-        mapping2[k] = kmeanModel.inertia_
+        mapping1[k] = distortions[-1]
+        mapping2[k] = inertias[-1]
 
+    # Plotting the elbow method graph
     plt.figure(figsize=(8, 4))
     plt.plot(k_range, distortions, 'bx-')
     plt.xlabel('Number of clusters')
@@ -380,9 +394,11 @@ def plot_elbow_method(data, k_range, output_file_path):
     plt.savefig(output_file_path)
     plt.close()
 
+    print(f"Elbow method plot saved to {output_file_path}")
+
 
 def get_optimal_k(df, max_k=100, output_file_path='elbow_method.png'):
-    k_range = range(2, max_k)  # Adjust the range based on your dataset and needs
+    k_range = range(20, max_k + 1, 5)
     plot_elbow_method(df, k_range, output_file_path)
     optimal_k = find_optimal_k(df, k_range)
     print(f"The optimal number of clusters is: {optimal_k}")
