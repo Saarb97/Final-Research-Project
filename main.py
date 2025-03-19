@@ -1,22 +1,22 @@
-import create_summarized_table
-import feature_extraction
-import result_analysis
-import xgboost_clusters
-import llm_api_feature_extraction
-from create_summarized_table import *
-from calc_gen_ai_features import *
-import time
-import os
-import sys
-import subprocess
-from xgboost_clusters import *
 import argparse
 import re
-import cProfile
+import subprocess
+import sys
+
 import dspy
+from dotenv import load_dotenv
 
+import create_summarized_table
+import feature_extraction
+import llm_api_feature_extraction
+import result_analysis
+import xgboost_clusters
+from calc_gen_ai_features import *
+from create_summarized_table import *
+from xgboost_clusters import *
 
-def clean_text_column(df, text_col_name='text'):
+load_dotenv()
+def clean_text_column(df, text_col_name):
     """Clean the text column by removing rows with empty text while retaining specific symbols (!, ?, .)."""
     # Drop rows with missing or empty text
     start_len = len(df)
@@ -26,6 +26,7 @@ def clean_text_column(df, text_col_name='text'):
     # Clean text by removing unusual symbols, non english text, except !, ?, .
     def clean_text(text):
         text = text.lower()  # Convert to lowercase
+        text = re.sub(r'http\S+|www\S+|https\S+', '', text, flags=re.MULTILINE)  # Remove URLs
         text = re.sub(r'[^a-zA-Z0-9\s!?.,]', '', text)  # Remove non-alphanumeric characters except !, ?, .
         text = re.sub(r'\s+', ' ', text)  # Replace multiple spaces with a single space
         return text.strip()  # Strip leading/trailing spaces
@@ -96,16 +97,15 @@ def _check_and_create_folder(folder_path):
                 print("Invalid response. Please reply with 'Y' or 'N'.")
 
 
-def main(openai_api_key):
+def main(openai_api_key, text_col_name='text'):
     # Runs only on scipy==1.12 because of gensim requirement of deprecated function
     VALID_STEPS = range(1, 7)  # Steps 1 to 6
 
     _ensure_spacy_model()
 
-    clusters_files_loc = 'testfolder3'
+    clusters_files_loc = os.path.join('sarcasm_dataset', 'clusters')
     xgboost_files_loc = os.path.join(clusters_files_loc, 'xgboost_files')
     results_files_loc = os.path.join(clusters_files_loc, 'results')
-    text_col_name = 'text'
     ai_features_loc = 'clustered_ai_features.csv'
 
     # If destination folder for files doesn't exist / cannot be created / user chose to abort.
@@ -221,5 +221,19 @@ def main(openai_api_key):
 
 
 if __name__ == '__main__':
-    openai_api_key = ''
-    main(openai_api_key)
+    api_key = os.getenv('OPENAI_KEY')
+    main(api_key, text_col_name='text')
+
+    # df = pd.read_csv('twitter sentiment/raw/twitter_training.csv')
+    # print(f'len before processing: {len(df)}')
+    # df = clean_text_column(df, text_col_name='text')
+    # print(f'len after processing: {len(df)}')
+    # df['text'] = df['topic'].astype(str) + ' ' + df['text'].astype(str)
+    # df.to_csv('twitter sentiment/processed/twitter_training.csv', index=False)
+    #
+    # df = pd.read_csv('twitter sentiment/raw/twitter_validation.csv')
+    # print(f'len before processing: {len(df)}')
+    # df = clean_text_column(df, text_col_name='text')
+    # print(f'len after processing: {len(df)}')
+    # df['text'] = df['topic'].astype(str) + ' ' + df['text'].astype(str)
+    # df.to_csv('twitter sentiment/processed/twitter_validation.csv', index=False)

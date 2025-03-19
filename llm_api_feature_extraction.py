@@ -1,11 +1,14 @@
 import json
-from openai import OpenAI
-import pandas as pd
-import numpy as np
-import tiktoken
 import os
-import dspy
 
+import dspy
+import numpy as np
+import pandas as pd
+import tiktoken
+from dotenv import load_dotenv
+from openai import OpenAI
+
+load_dotenv()
 
 class SubthemeExtraction(dspy.Signature):
     """Extract exactly 25 distinct subthemes from the provided text."""
@@ -327,8 +330,7 @@ def llm_feature_extraction_for_clusters_folder_dspy(clusters_files_loc: str, tex
 if __name__ == '__main__':
     text_file_loc = 'clusters csv'
     text_col_name = 'text'
-
-    # api_key = ('API-KEY-HERE')
+    api_key = os.getenv('OPENAI_KEY')
     # client = OpenAI(api_key=api_key)
 
     # features = llm_feature_extraction_for_cluster_csv(client, text_file_loc, text_col_name)

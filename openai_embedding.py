@@ -1,12 +1,13 @@
+import os
+import time
+from concurrent.futures import ThreadPoolExecutor, as_completed
+
 import pandas as pd
 import tiktoken
+from dotenv import load_dotenv
 from openai import OpenAI
-from concurrent.futures import ThreadPoolExecutor, as_completed
-import time
-import os
 
-import time
-
+load_dotenv()
 
 # Function to get embeddings with rate limit handling
 def get_embedding(text, model):
@@ -48,7 +49,7 @@ def get_dataset_embeddings(file_path, client: OpenAI,text_col_name: str, model="
 
     # Filter the DataFrame
     df = df[[text_col_name]]
-    df["n_tokens"] = df.text.apply(lambda x: len(encoding.encode(x)))
+    df["n_tokens"] = df[text_col_name].apply(lambda x: len(encoding.encode(x)))
     df = df[df.n_tokens <= max_tokens]
 
     # Multithreading settings
@@ -94,15 +95,13 @@ def get_dataset_embeddings(file_path, client: OpenAI,text_col_name: str, model="
     return df
 
 
-
-
 if __name__ == '__main__':
-    text_file_loc = 'clusters csv'
+    # text_file_loc = 'sarcasm_dataset'
     text_col_name = 'text'
 
-    api_key = ('API KEY HERE')
+    api_key = os.getenv('OPENAI_KEY')
     client = OpenAI(api_key=api_key)
-    file_path = os.path.join('twitter sentiment','twitter_sentiment_training_processed.csv')
-    df = get_dataset_embeddings(file_path, client,text_col_name)
-    df.to_csv('twitter_training_openai_embeddings.csv', index=False)
+    #file_path = os.path.join('sarcasm_dataset', 'sarcasm_with_preds.csv')
+    df = get_dataset_embeddings('twitter sentiment/processed/twitter_training.csv', client, text_col_name)
+    df.to_csv('twitter sentiment/processed/twitter_training_openai_embeddings2.csv', index=False)
 
