@@ -106,7 +106,7 @@ def objective(trial):
 # Run Optuna optimization
 pruner = optuna.pruners.HyperbandPruner()
 study = optuna.create_study(direction="maximize",pruner=pruner)
-study.optimize(objective,timeout=3600)
+study.optimize(objective,timeout=43200)  #43200 - 12 hours
 
 # Best hyperparameters found
 best_params = study.best_params
