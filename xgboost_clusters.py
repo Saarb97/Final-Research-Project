@@ -23,15 +23,15 @@ from imblearn.under_sampling import TomekLinks
 import os
 
 
-def load_and_prepare_data(file_name):
+def load_and_prepare_data(file_name, text_col_name, target_col_name):
     """Load data from a CSV file and prepare it for modeling."""
     data = pd.read_csv(file_name)
     try:
-        data.drop(columns=['text', 'cluster', 'named_entities'], inplace=True)  # Drop non-numeric or unnecessary columns
+        data.drop(columns=[text_col_name, 'cluster', 'named_entities'], inplace=True)  # Drop non-numeric or unnecessary columns
     except KeyError:
-        data.drop(columns=['text', 'cluster'], inplace=True)
-    X = data.drop(columns=['performance'])
-    y = data['performance']
+        data.drop(columns=[text_col_name, 'cluster'], inplace=True)
+    X = data.drop(columns=[target_col_name])
+    y = data[target_col_name]
     return X, y
 
 
@@ -257,14 +257,14 @@ def safely_compute_pr_auc(y_true, y_proba, pos_label):
     return average_precision_score(y_true == pos_label, y_proba[:, pos_label])
 
 
-def main_kfold(data_files_loc, num_of_clusters, output_loc):
+def main_kfold(data_files_loc, num_of_clusters, output_loc, text_col_name, target_col_name):
     summary_results = []
     all_feature_importances = []
     for i in range(num_of_clusters):  # Loop from 0_data.csv to 19_data.csv
         start = time.time()
         print(f'Cluster {i}')
         file_name = os.path.join(data_files_loc, f'{i}_data.csv')
-        X, y = load_and_prepare_data(file_name)
+        X, y = load_and_prepare_data(file_name, text_col_name, target_col_name)
         (avg_accuracy, avg_roc_auc_0, avg_roc_auc_1, reports, feature_importances ,
          avg_pr_auc_0, avg_pr_auc_1, avg_global_pr_auc,
          avg_global_roc_auc, avg_weighted_f1_score) = train_with_smote_kfold(X, y)

@@ -41,6 +41,8 @@ def calculate_statistical_significance(group, passed_prompts,  textual_cols):
             p_vals.append(p_val)
         except Exception as e:
             print(f'Error calculating mannwhitneyu for column {col}: {e}')
+            print(f'group col len: {len(group[col])}')
+            print(f'passed prompts len: {len(passed_prompts[col])}')
             u_stat, p_val = None, None
 
     return u_stats, p_vals
@@ -85,7 +87,7 @@ def _created_statistics_tables(num_clusters, textual_cols, destination):
         for cluster, group in cluster_groups:
             cluster_dfs[cluster] = process_cluster(group, passed_prompts, textual_cols)
             cluster_file = os.path.join(destination, f"{cluster}_statistics.csv")
-            cluster_dfs[cluster].to_csv(cluster_file)
+            cluster_dfs[cluster].to_csv(cluster_file, index=False)
 
         # for cluster, df in cluster_dfs.items():
         #     df.to_csv(f'{destination}\\{cluster}_statistics.csv')
@@ -144,4 +146,4 @@ if __name__ == '__main__':
     #             cluster_dfs[cluster] = process_cluster(group, passed_prompts)
     #
     #         for cluster, df in cluster_dfs.items():
-    #             df.to_csv(f'clusters csv\\{cluster}_statistics.csv')
+    #             df.to_csv(f'clusters csv\\{cluster}_statistics.csv', index=False)

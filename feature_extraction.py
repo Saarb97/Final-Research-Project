@@ -229,8 +229,6 @@ def _apply_LDA(df, text_col_name):
 
 
 def generic_feature_extraction(df: pd.DataFrame, text_col_name) -> pd.DataFrame:
-    nltk.download('punkt')
-
     df = _apply_basic_text_features(df, text_col_name)
     df = _apply_LDA(df, text_col_name)
     return df
@@ -245,6 +243,7 @@ def generic_feature_extraction_chunk(chunk: pd.DataFrame, text_col_name) -> pd.D
 
 
 def generic_feature_extraction_parallel(df: pd.DataFrame, text_col_name, n_jobs=4) -> pd.DataFrame:
+    nltk.download('punkt')
     # Split the DataFrame into chunks
     n_jobs = min(mp.cpu_count(), n_jobs)
     chunks = np.array_split(df, n_jobs)

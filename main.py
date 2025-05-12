@@ -5,7 +5,7 @@ import sys
 
 import dspy
 from dotenv import load_dotenv
-
+import torch
 import create_summarized_table
 import feature_extraction
 import llm_api_feature_extraction
@@ -26,7 +26,7 @@ def clean_text_column(df, text_col_name):
     # Clean text by removing unusual symbols, non english text, except !, ?, .
     def clean_text(text):
         text = text.lower()  # Convert to lowercase
-        text = re.sub(r'http\S+|www\S+|https\S+', '', text, flags=re.MULTILINE)  # Remove URLs
+        text = re.sub(r"^[-a-zA-Z0-9@:%._\\+~#=]{1,256}\\.[a-zA-Z0-9()]{1,6}\\b(?:[-a-zA-Z0-9()@:%_\\+.~#?&\\/=]*)$", '', text, flags=re.MULTILINE)  # Remove URLs
         text = re.sub(r'[^a-zA-Z0-9\s!?.,]', '', text)  # Remove non-alphanumeric characters except !, ?, .
         text = re.sub(r'\s+', ' ', text)  # Replace multiple spaces with a single space
         return text.strip()  # Strip leading/trailing spaces
@@ -74,77 +74,116 @@ def _ensure_spacy_model():
         except subprocess.CalledProcessError as e:
             print(f"An error occurred while installing the 'en_core_web_sm' model: {e}")
 
+def _ensure_textblob_corpora():
+    try:
+        # Try importing TextBlob and accessing a corpus to check if corpora are installed
+        from textblob import TextBlob
+        from textblob.utils import get_file
+        # Attempt to access the 'brown' corpus (part of TextBlob's corpora)
+        get_file('brown')
+        print("TextBlob corpora loaded successfully.")
+    except (ImportError, FileNotFoundError, OSError):
+        # If corpora are not installed or TextBlob is missing, attempt to download
+        print("TextBlob corpora are not installed. Installing them now...")
+        try:
+            subprocess.run([sys.executable, "-m", "textblob.download_corpora"], check=True)
+            print("TextBlob corpora have been installed successfully.")
+        except subprocess.CalledProcessError as e:
+            print(f"An error occurred while installing TextBlob corpora: {e}")
+            sys.exit(1)  # Exit on failure to ensure script stops if corpora are critical
+
 
 def _check_and_create_folder(folder_path):
     if os.path.exists(folder_path):
         return True
     else:
-        while True:
-            response = input(
-                f"The folder '{folder_path}' does not exist. Do you want to create it? (Y/N): ").strip().lower()
-            if response == 'y':
-                try:
-                    os.makedirs(folder_path)
-                    print(f"Folder '{folder_path}' has been created successfully.")
-                    return True
-                except Exception as e:
-                    print(f"An error occurred while creating the folder: {e}")
-                    return False
-            elif response == 'n':
-                print("Folder creation cancelled.")
-                return False
-            else:
-                print("Invalid response. Please reply with 'Y' or 'N'.")
+        try:
+            os.makedirs(folder_path)
+            return True
+        except Exception as e:
+            return False
+    # if os.path.exists(folder_path):
+    #     return True
+    # else:
+    #     while True:
+    #         response = input(
+    #             f"The folder '{folder_path}' does not exist. Do you want to create it? (Y/N): ").strip().lower()
+    #         if response == 'y':
+    #             try:
+    #                 os.makedirs(folder_path)
+    #                 print(f"Folder '{folder_path}' has been created successfully.")
+    #                 return True
+    #             except Exception as e:
+    #                 print(f"An error occurred while creating the folder: {e}")
+    #                 return False
+    #         elif response == 'n':
+    #             print("Folder creation cancelled.")
+    #             return False
+    #         else:
+    #             print("Invalid response. Please reply with 'Y' or 'N'.")
 
 
-def main(openai_api_key, text_col_name='text'):
+def main(openai_api_key, data_path, text_col_name, target_col_name):
     # Runs only on scipy==1.12 because of gensim requirement of deprecated function
+    print(f'cuda.is_available: {torch.cuda.is_available()}')
+    print(f'torch.cuda.device_count(): {torch.cuda.device_count()}')
+    print(f'torch.__version__: {torch.__version__}') 
+    print(f'torch.version.cuda: {torch.version.cuda}')
+    print(f"Current Device: {torch.cuda.current_device() if torch.cuda.is_available() else 'CPU'}")
+    print(f"Device Name: {torch.cuda.get_device_name(0) if torch.cuda.is_available() else 'No GPU'}")
     VALID_STEPS = range(1, 7)  # Steps 1 to 6
 
     _ensure_spacy_model()
-
-    clusters_files_loc = os.path.join('sarcasm_dataset', 'clusters')
+    _ensure_textblob_corpora()
+    
+    clusters_files_loc = os.path.join('imdb', 'clusters')
     xgboost_files_loc = os.path.join(clusters_files_loc, 'xgboost_files')
     results_files_loc = os.path.join(clusters_files_loc, 'results')
     ai_features_loc = 'clustered_ai_features.csv'
 
     # If destination folder for files doesn't exist / cannot be created / user chose to abort.
     if not _check_and_create_folder(clusters_files_loc):
+        print("failed to create clusters folder. Exiting.")
         sys.exit()
 
     if not _check_and_create_folder(xgboost_files_loc):
+        print("failed to create xgboost folder. Exiting.")
         sys.exit()
 
     if not _check_and_create_folder(results_files_loc):
+        print("failed to create results folder. Exiting.")
         sys.exit()
 
-    # Argument parsing for step control
-    parser = argparse.ArgumentParser(description="Run pipeline from a specific step.")
-    parser.add_argument(
-        '--start', type=int, default=1,
-        help=f"Step to start from ({VALID_STEPS.start}-{VALID_STEPS.stop - 1}). Default is 1."
-    )
-    args = parser.parse_args()
+    # # Argument parsing for step control
+    # parser = argparse.ArgumentParser(description="Run pipeline from a specific step.")
+    # parser.add_argument(
+    #     '--start', type=int, default=1,
+    #     help=f"Step to start from ({VALID_STEPS.start}-{VALID_STEPS.stop - 1}). Default is 1."
+    # )
+    # args = parser.parse_args()
 
-    # Validate the `--start` argument
-    start_step = args.start
-    if start_step not in VALID_STEPS:
-        parser.error(f"Invalid value for --start. Must be between {VALID_STEPS.start} and {VALID_STEPS.stop - 1}.")
+    # # Validate the `--start` argument
+    # start_step = args.start
+    # if start_step not in VALID_STEPS:
+    #     parser.error(f"Invalid value for --start. Must be between {VALID_STEPS.start} and {VALID_STEPS.stop - 1}.")
 
     # Timing the whole process
     start_whole = time.time()
 
+    start_step = 1
+    
     # Step 1: Feature extraction
     if start_step <= 1:
         print("Starting from Step 1: Feature Extraction")
         start = time.time()
-        df = load_data('all_clustering_09_05.csv')
+        df = pd.read_csv(data_path)
         # df = load_data(os.path.join('twitter sentiment', 'twitter_clustering24_11_24.csv'))
 
         # Clean text column
+        print(f'text column name:{text_col_name}')
         df = clean_text_column(df, text_col_name)
 
-        df_with_features = feature_extraction.generic_feature_extraction_parallel(df, text_col_name, 4)
+        df_with_features = feature_extraction.generic_feature_extraction_parallel(df, text_col_name, 56)
         df_with_features.to_csv(os.path.join(clusters_files_loc, 'test_feature_extraction_file.csv'), index=False)
         elapsed = round(time.time() - start)
         print(f'Time for basic feature extraction: {elapsed} seconds')
@@ -172,7 +211,7 @@ def main(openai_api_key, text_col_name='text'):
                      cache=False)
         dspy.configure(lm=lm)
         llm_features_pd = (llm_api_feature_extraction.
-                           llm_feature_extraction_for_clusters_folder_dspy(lm, clusters_files_loc, text_col_name,
+                           llm_feature_extraction_for_clusters_folder_dspy(clusters_files_loc, text_col_name,
                                                                            model="gpt-4o-mini"))
 
         ai_features_file_name = os.path.join(clusters_files_loc, 'llm_features_per_cluster.csv')
@@ -185,7 +224,7 @@ def main(openai_api_key, text_col_name='text'):
 
     # Step 4: DeBERTa for LLM features
     if start_step <= 4:
-        print("Step 3: DeBERTa for LLM features")
+        print("Step 4: DeBERTa for LLM features")
         start = time.time()
         deberta_for_llm_features(ai_features_file_name, clusters_files_loc)
         elapsed = round(time.time() - start)
@@ -193,24 +232,24 @@ def main(openai_api_key, text_col_name='text'):
 
     # Step 5: Summarized tables creation
     if start_step <= 5:
-        print("Step 4: Summarized Tables Creation")
+        print("Step 5: Summarized Tables Creation")
         start = time.time()
-        create_summarized_table.create_summarized_tables(df_with_features, 'text', 'performance', clusters_files_loc,
+        create_summarized_table.create_summarized_tables(df_with_features, text_col_name, target_col_name, clusters_files_loc,
                                                          num_of_clusters)
         elapsed = round(time.time() - start)
         print(f'Time for summarized table creation: {elapsed} seconds')
 
     # Step 6: XGBoost models
     if start_step <= 6:
-        print("Step 5: XGBoost Models")
+        print("Step 6: XGBoost Models")
         start = time.time()
-        xgboost_clusters.main_kfold(clusters_files_loc, num_of_clusters, xgboost_files_loc)
+        xgboost_clusters.main_kfold(clusters_files_loc, num_of_clusters, xgboost_files_loc, text_col_name, target_col_name)
         elapsed = round(time.time() - start)
         print(f'Time for running XGBoost models: {elapsed} seconds')
 
     # Step 7: Result analysis
     if start_step <= 7:
-        print("Step 6: Result Analysis")
+        print("Step 7: Result Analysis")
         start = time.time()
         result_analysis.analyse_results(clusters_files_loc, num_of_clusters, results_files_loc)
         elapsed = round(time.time() - start)
@@ -222,7 +261,7 @@ def main(openai_api_key, text_col_name='text'):
 
 if __name__ == '__main__':
     api_key = os.getenv('OPENAI_KEY')
-    main(api_key, text_col_name='text')
+    main(api_key, data_path='imdb/experiment_ready_data.csv', text_col_name='review', target_col_name='performance')
 
     # df = pd.read_csv('twitter sentiment/raw/twitter_training.csv')
     # print(f'len before processing: {len(df)}')

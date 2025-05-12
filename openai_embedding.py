@@ -42,7 +42,7 @@ def process_row(row_idx, text, embedding_model):
 
 def get_dataset_embeddings(file_path, client: OpenAI,text_col_name: str, model="text-embedding-3-small", embedding_encoding="cl100k_base"):
     # API settings
-    max_tokens = 8000  # maximum tokens allowed per request
+    max_tokens = 8150  # maximum tokens allowed per request
 
     df = pd.read_csv(file_path)
     encoding = tiktoken.get_encoding(embedding_encoding)
