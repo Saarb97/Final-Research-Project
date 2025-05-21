@@ -239,8 +239,9 @@ def llm_feature_extraction_for_clusters_folder(client, clusters_files_loc: str, 
 
 def llm_feature_extraction_for_cluster_csv_dspy(text_file_loc, text_col_name, model="gpt-4o-mini"):
     # Token limit set for gpt 4/o/o1/o-mini/o1-mini (including output)
-    TOKEN_LIMIT_PER_PROMPT = 128_000 - 8_000  # reserved for internal model use.
-    OUTPUT_TOKEN_ESTIMATE = 2_000  # Estimated tokens for the model's output
+    TOKEN_LIMIT_PER_PROMPT = 128_000  # Full model context window
+    RESERVED_TOKENS = 8_000  # Reserved for internal model use, unknown factors
+    OUTPUT_TOKEN_ESTIMATE = 2_500  # Increased estimate for safety margin for the JSON output with 25 subthemes
 
     instruction = (
         "Analyze this series of stories and questions to identify exactly five main recurring themes. "
@@ -251,50 +252,100 @@ def llm_feature_extraction_for_cluster_csv_dspy(text_file_loc, text_col_name, mo
         "Do not skip or summarize steps, and ensure the output strictly adheres to the required structure."
     )
 
-    # Load the DataFrame from the CSV
     df = pd.read_csv(text_file_loc)
 
     if text_col_name not in df.columns:
         raise ValueError(f"Column '{text_col_name}' not found in the input file: {text_file_loc}")
 
-    # Token calculation
     instruction_tokens = _count_tokens(instruction, model)
-    text_list = df[text_col_name].astype(str).tolist()
-    text_tokens = _count_tokens("\n".join(text_list), model)
-    total_tokens = instruction_tokens + text_tokens
+    # Calculate available token space specifically for the text content of a chunk
+    available_text_token_space = TOKEN_LIMIT_PER_PROMPT - instruction_tokens - RESERVED_TOKENS - OUTPUT_TOKEN_ESTIMATE
 
-    # Determine how many splits are needed
-    available_token_space = TOKEN_LIMIT_PER_PROMPT - instruction_tokens - OUTPUT_TOKEN_ESTIMATE
-    if total_tokens > available_token_space:
-        num_splits = -(-total_tokens // available_token_space)  # Ceiling division
-        print(f"Cluster at {text_file_loc} is too large for {model} context window. Splitting into {num_splits} parts.")
+    if available_text_token_space <= 0:
+        raise ValueError(
+            f"Instruction tokens ({instruction_tokens}) + reserved ({RESERVED_TOKENS}) + output estimate ({OUTPUT_TOKEN_ESTIMATE}) "
+            f"exceed or meet the token limit ({TOKEN_LIMIT_PER_PROMPT}). No space for text."
+        )
 
-        # Split the DataFrame into nearly equal-sized chunks
-        text_chunks = np.array_split(df[text_col_name], num_splits)
+    all_texts_from_col = df[text_col_name].astype(str).tolist()
+    all_results = []
+    current_chunk_texts_list = []
+    current_chunk_tokens_count = 0
+    chunk_number = 0
+    newline_token_count = _count_tokens("\n", model) # Usually 1, count it once
 
-        all_results = []
+    for text_item_content in all_texts_from_col:
+        text_item_tokens = _count_tokens(text_item_content, model)
 
-        # Process each chunk with the full instruction
-        for idx, cluster_text in enumerate(text_chunks):
-            print(f"Processing chunk {idx + 1} of {len(text_chunks)}...")
-            print(f"chunk len: {len(cluster_text)}")
-            chunk_text = '\n'.join(cluster_text.astype(str))  # Combine the chunk into a single string
+        # Handle individual text items that are too large on their own
+        if text_item_tokens > available_text_token_space:
+            print(f"Warning: Text item in {text_file_loc} (length: {len(text_item_content)}) is too long ({text_item_tokens} tokens) "
+                  f"to fit in any chunk with the current instruction and will be skipped. "
+                  f"Available space for text: {available_text_token_space} tokens.")
+            # Option: Truncate here if necessary, or log this specific item
+            # For now, we skip it
+            continue
 
-            extractor = SubthemeExtractor()
-            result = extractor(texts=chunk_text, instruction=instruction)
+        # Check if adding the current text item (plus a newline if it's not the first in chunk) would exceed the limit
+        potential_new_tokens = text_item_tokens
+        if current_chunk_texts_list: # If chunk is not empty, a newline will be added before this item
+            potential_new_tokens += newline_token_count
 
-            # Collect the themes and subthemes
-            for key, value_list in result.themes.items():
-                all_results.extend(value_list)
-    else:
-        # Process normally if token count is within the limit
-        texts = '\n'.join(df[text_col_name].astype(str))
-        extractor = SubthemeExtractor()
-        result = extractor(texts=texts, instruction=instruction)
+        if current_chunk_tokens_count + potential_new_tokens <= available_text_token_space:
+            current_chunk_texts_list.append(text_item_content)
+            current_chunk_tokens_count += potential_new_tokens
+        else:
+            # Process the current chunk as it's full
+            if current_chunk_texts_list:
+                chunk_number += 1
+                print(f"Processing chunk {chunk_number} for {text_file_loc} with {current_chunk_tokens_count} text tokens...")
+                chunk_text_as_string = '\n'.join(current_chunk_texts_list)
 
-        all_results = []
-        for key, value_list in result.themes.items():
-            all_results.extend(value_list)
+                # Final check for this specific chunk's total tokens
+                final_chunk_prompt_tokens = instruction_tokens + _count_tokens(chunk_text_as_string, model)
+                if final_chunk_prompt_tokens + RESERVED_TOKENS + OUTPUT_TOKEN_ESTIMATE > TOKEN_LIMIT_PER_PROMPT:
+                    print(f"CRITICAL: Chunk {chunk_number} for {text_file_loc} still calculated to exceed total token limit "
+                          f"({final_chunk_prompt_tokens} + {RESERVED_TOKENS} + {OUTPUT_TOKEN_ESTIMATE} > {TOKEN_LIMIT_PER_PROMPT}). "
+                          f"Skipping this chunk to prevent API error. This indicates an issue in token calculation or an extremely dense chunk.")
+                else:
+                    try:
+                        extractor = SubthemeExtractor()
+                        result = extractor(texts=chunk_text_as_string, instruction=instruction)
+                        for key, value_list in result.themes.items():
+                            all_results.extend(value_list)
+                    except Exception as e:
+                        print(f"Error processing chunk {chunk_number} for {text_file_loc} with DSPy: {e}")
+
+
+            # Start a new chunk with the current text_item
+            current_chunk_texts_list = [text_item_content]
+            current_chunk_tokens_count = text_item_tokens # No newline token for the first item in a new chunk
+
+    # Process the last remaining chunk, if any
+    if current_chunk_texts_list:
+        chunk_number += 1
+        print(f"Processing final chunk {chunk_number} for {text_file_loc} with {current_chunk_tokens_count} text tokens...")
+        chunk_text_as_string = '\n'.join(current_chunk_texts_list)
+
+        final_chunk_prompt_tokens = instruction_tokens + _count_tokens(chunk_text_as_string, model)
+        if final_chunk_prompt_tokens + RESERVED_TOKENS + OUTPUT_TOKEN_ESTIMATE > TOKEN_LIMIT_PER_PROMPT:
+             print(f"CRITICAL: Final chunk {chunk_number} for {text_file_loc} still calculated to exceed total token limit "
+                   f"({final_chunk_prompt_tokens} + {RESERVED_TOKENS} + {OUTPUT_TOKEN_ESTIMATE} > {TOKEN_LIMIT_PER_PROMPT}). "
+                   f"Skipping this chunk.")
+        else:
+            try:
+                extractor = SubthemeExtractor()
+                result = extractor(texts=chunk_text_as_string, instruction=instruction)
+                for key, value_list in result.themes.items():
+                    all_results.extend(value_list)
+            except Exception as e:
+                print(f"Error processing final chunk {chunk_number} for {text_file_loc} with DSPy: {e}")
+
+
+    if not all_results and df.empty:
+        print(f"No texts found in {text_file_loc} to process.")
+    elif not all_results and not df.empty:
+        print(f"No results were generated from {text_file_loc}. This could be due to all texts being skipped or an LLM issue.")
 
     return all_results
 

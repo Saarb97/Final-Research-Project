@@ -134,43 +134,42 @@ def main(openai_api_key, data_path, text_col_name, target_col_name):
     VALID_STEPS = range(1, 7)  # Steps 1 to 6
 
     _ensure_spacy_model()
+    print("DEBUG: main - Spacy model ensured.")
     _ensure_textblob_corpora()
+    print("DEBUG: main - Textblob corpora ensured. This is AFTER 'Finished.' from textblob.") # Key marker
     
+    print("DEBUG: main - Defining folder paths...")
     clusters_files_loc = os.path.join('imdb', 'clusters')
+    print(f"DEBUG: main - clusters_files_loc = {clusters_files_loc}")
     xgboost_files_loc = os.path.join(clusters_files_loc, 'xgboost_files')
+    print(f"DEBUG: main - xgboost_files_loc = {xgboost_files_loc}")
     results_files_loc = os.path.join(clusters_files_loc, 'results')
+    print(f"DEBUG: main - results_files_loc = {results_files_loc}")
     ai_features_loc = 'clustered_ai_features.csv'
-
-    # If destination folder for files doesn't exist / cannot be created / user chose to abort.
+    print(f"DEBUG: main - ai_features_loc defined: {ai_features_loc}")
+    
+    print("DEBUG: main - Checking/creating clusters_files_loc...")
     if not _check_and_create_folder(clusters_files_loc):
         print("failed to create clusters folder. Exiting.")
         sys.exit()
-
+    print("DEBUG: main - clusters_files_loc OK.")
+    
+    print("DEBUG: main - Checking/creating xgboost_files_loc...")
     if not _check_and_create_folder(xgboost_files_loc):
         print("failed to create xgboost folder. Exiting.")
         sys.exit()
-
+    print("DEBUG: main - xgboost_files_loc OK.")
+    
+    print("DEBUG: main - Checking/creating results_files_loc...")
     if not _check_and_create_folder(results_files_loc):
         print("failed to create results folder. Exiting.")
         sys.exit()
-
-    # # Argument parsing for step control
-    # parser = argparse.ArgumentParser(description="Run pipeline from a specific step.")
-    # parser.add_argument(
-    #     '--start', type=int, default=1,
-    #     help=f"Step to start from ({VALID_STEPS.start}-{VALID_STEPS.stop - 1}). Default is 1."
-    # )
-    # args = parser.parse_args()
-
-    # # Validate the `--start` argument
-    # start_step = args.start
-    # if start_step not in VALID_STEPS:
-    #     parser.error(f"Invalid value for --start. Must be between {VALID_STEPS.start} and {VALID_STEPS.stop - 1}.")
-
-    # Timing the whole process
+    print("DEBUG: main - results_files_loc OK.")
+    
+    print("DEBUG: main - Initializing start_whole and start_step...")
     start_whole = time.time()
-
-    start_step = 1
+    start_step = 4 # Current hardcoded value
+    print(f"DEBUG: main - start_step = {start_step}")
     
     # Step 1: Feature extraction
     if start_step <= 1:
@@ -192,6 +191,8 @@ def main(openai_api_key, data_path, text_col_name, target_col_name):
         df_with_features = pd.read_csv(os.path.join(clusters_files_loc, 'test_feature_extraction_file.csv'))
 
     # Step 2: Cluster splitting
+    # Will merge clusters that have a single label in their target feature
+    # I.e target_col_name is all 0 or all 1.
     if start_step <= 2:
         print("Step 2: Cluster Splitting")
         start = time.time()
@@ -217,16 +218,16 @@ def main(openai_api_key, data_path, text_col_name, target_col_name):
         ai_features_file_name = os.path.join(clusters_files_loc, 'llm_features_per_cluster.csv')
         llm_features_pd.to_csv(ai_features_file_name, index=False)
         elapsed = round(time.time() - start)
-        print(f'Time for running DeBERTa on LLM features: {elapsed} seconds')
+        print(f'Time for  extracting LLM features from OpenAI GPT model: {elapsed} seconds')
     else:
         print("Skipping Step 3: Assuming llm features file already exists.")
-        ai_features_file_name = os.path.join(clusters_files_loc, 'ai_features_per_cluster.csv')
+        ai_features_file_name = os.path.join(clusters_files_loc, 'llm_features_per_cluster.csv')
 
     # Step 4: DeBERTa for LLM features
     if start_step <= 4:
         print("Step 4: DeBERTa for LLM features")
         start = time.time()
-        deberta_for_llm_features(ai_features_file_name, clusters_files_loc)
+        deberta_for_llm_features(ai_features_file_name, clusters_files_loc, text_col_name)
         elapsed = round(time.time() - start)
         print(f'Time for running DeBERTa on LLM features: {elapsed} seconds')
 
@@ -251,7 +252,7 @@ def main(openai_api_key, data_path, text_col_name, target_col_name):
     if start_step <= 7:
         print("Step 7: Result Analysis")
         start = time.time()
-        result_analysis.analyse_results(clusters_files_loc, num_of_clusters, results_files_loc)
+        result_analysis.analyse_results(clusters_files_loc, num_of_clusters, results_files_loc, text_col_name, target_col_name)
         elapsed = round(time.time() - start)
         print(f'Time for result analysis: {elapsed} seconds')
 

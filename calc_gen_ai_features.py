@@ -1,348 +1,346 @@
 import pandas as pd
 import numpy as np
-from sentence_transformers import SentenceTransformer, util
-from transformers import pipeline
+# from sentence_transformers import SentenceTransformer, util # Not used in DeBERTa path
+from transformers import pipeline # Keep if legacy classifier is ever used
 from transformers import AutoModelForSequenceClassification, AutoTokenizer, BitsAndBytesConfig
 import time
 import torch
 import os
-from multiprocessing import Pool, cpu_count
-from torch.utils.data import DataLoader, Dataset
-from torch.multiprocessing import Pool, set_start_method
-from itertools import chain
+# from multiprocessing import Pool, cpu_count # Keep if true parallelism is restored
+from torch.multiprocessing import set_start_method # Keep for multiprocessing setup
+# from torch.utils.data import DataLoader, Dataset # No longer needed for the new approach
+# from itertools import chain # Keep, might be used in _compute_probabilities
 
 device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 print(f'Using device: {device}')
 
-# Load the zero-shot classification pipeline
-classifier = pipeline("zero-shot-classification", model="MoritzLaurer/deberta-v3-large-zeroshot-v2.0")
+# It's good practice to load model and tokenizer once globally if they don't change
+# Consider enabling quantization for significant memory savings
+#bnb_config = BitsAndBytesConfig(
+#    load_in_4bit=True,
+#    bnb_4bit_quant_type="nf4",
+#    bnb_4bit_compute_dtype=torch.float16,
+#)
 
-# bnb_config = BitsAndBytesConfig(
-#     load_in_4bit=True,
-#     bnb_4bit_quant_type="nf4",
-#     bnb_4bit_compute_dtype=torch.float16,
-# )
-
-#
 nli_model = AutoModelForSequenceClassification.from_pretrained(
     "MoritzLaurer/deberta-v3-large-zeroshot-v2.0",
-    # quantization_config=bnb_config,
-    # torch_dtype=torch.float16,
+    #quantization_config=bnb_config, # Enable this for 4-bit quantization
+    # device_map="auto" # Recommended with BitsAndBytes for automatic device placement
 )
+# If not using device_map="auto", then explicit .to(device) is needed.
+# However, with quantization_config, .to(device) might behave differently or be handled by device_map.
+# If device_map is not used, and you encounter issues, try nli_model.to(device) after loading.
+# For now, let's assume device_map="auto" (you'd add it above) or BitsAndBytes handles it.
+# If you don't use device_map="auto" and quantization_config, then this is correct:
+if not hasattr(nli_model, 'hf_device_map'): # Simple check if device_map might have been used
+    nli_model.to(device)
 
-nli_model.to(device)
 tokenizer = AutoTokenizer.from_pretrained("MoritzLaurer/deberta-v3-large-zeroshot-v2.0")
 
-def collate_fn(batch):
-    sentences, hypotheses = zip(*batch)
-    return list(sentences), hypotheses
-
-# Old experiment - Load SBERT model
-#model = SentenceTransformer('all-mpnet-base-v2')
-
-# Old experiment using sentence-bert.
-def encode_text(text):
-    """Encode text using the SBERT model."""
-    return model.encode(text, convert_to_tensor=True)
-
-# Old cosine similarity experiment - not used
-def compute_cosine_similarity(text_embeddings, concept_embeddings):
-    """Compute cosine similarity between text and concept embeddings."""
-    return util.pytorch_cos_sim(text_embeddings, concept_embeddings)
-
-# Old cosine similarity experiment - not used
-def compute_best_scores(cosine_scores, ai_features):
-    """Compute the best scores for each concept word for each text."""
-    best_scores = []
-    for scores in cosine_scores:
-        best_score = {ai_features[i]: scores[i].item() for i in range(len(ai_features))}
-        best_scores.append(best_score)
-    return best_scores
-
-
-# Old cosine similarity experiment - not used
-def process_file(file_index, ai_features):
-    """Process a single file, compute scores, and concatenate results."""
-    file_name = f'clusters csv/{file_index}_data.csv'
-    data = pd.read_csv(file_name)
-    cluster_text = data['text']
-
-    # Encode concept words and text data
-    ai_features_embeddings = encode_text(ai_features)
-    text_embeddings = encode_text(cluster_text.tolist())
-
-    # Compute cosine similarity
-    cosine_scores = compute_cosine_similarity(text_embeddings, ai_features_embeddings)
-    # Compute the best scores
-    scores_list = compute_best_scores(cosine_scores, ai_features)
-
-    # Convert the list of scores to a DataFrame
-    scores_df = pd.DataFrame(scores_list)
-
-    # Combine the scores with the original dataframe
-    result_df = pd.concat([data, scores_df], axis=1)
-
-    # Save the result back to the original CSV file
-    # result_df.to_csv(file_name, index=False)
-
-
-# Cosine similarity experiment - not used
-def compute_dimension_wise_cosine_similarity(text_embedding, concept_embeddings):
-    """Compute the best dimension-wise cosine similarity for a text embedding and each concept embedding."""
-    best_similarities = []
-    text_embedding = text_embedding.squeeze()
-    concept_embeddings = concept_embeddings.squeeze()
-
-    for concept_embedding in concept_embeddings:
-        # Calculate cosine similarity for each dimension
-        similarities = [
-            (text_embedding[i] * concept_embedding[i]) /
-            (np.linalg.norm(text_embedding[i]) * np.linalg.norm(concept_embedding[i]))
-            for i in range(len(text_embedding))
-        ]
-        # Take the highest similarity score
-        best_similarity = max(similarities)
-        best_similarities.append(best_similarity)
-
-    return best_similarities
-
-
-# Cosine similarity experiment - not used
-def compute_best_scores_dimension_wise(text_embeddings, concept_embeddings, ai_features):
-    """Compute the best scores for each concept word for each text using dimension-wise cosine similarity."""
-    best_scores = []
-    for text_embedding in text_embeddings:
-        best_similarities = compute_dimension_wise_cosine_similarity(text_embedding, concept_embeddings)
-        best_score = {ai_features[i]: best_similarities[i] for i in range(len(ai_features))}
-        best_scores.append(best_score)
-    return best_scores
-
-
-# Cosine similarity experiment - not used
-def process_file_dimension_wise(file_index, ai_features):
-    """Process a single file, compute scores using dimension-wise cosine similarity, and concatenate results."""
-    file_name = f'clusters csv/{file_index}_data.csv'
-    data = pd.read_csv(file_name)
-    cluster_text = data['text']
-
-    # Encode concept words and text data
-    ai_features_embeddings = encode_text(ai_features)
-    text_embeddings = encode_text(cluster_text.tolist())
-
-    # Compute the best scores using the new method
-    scores_list = compute_best_scores_dimension_wise(text_embeddings, ai_features_embeddings, ai_features)
-
-    # Convert the list of scores to a DataFrame
-    scores_df = pd.DataFrame(scores_list)
-    print(scores_df)
-    # Combine the scores with the original dataframe
-    result_df = pd.concat([data, scores_df], axis=1)
-
-    # Save the result back to the original CSV file
-    result_df.to_csv('bert_test.csv', index=False)
-
-
-# Legacy code
-def classify_sentence(sentence, ai_features):
-    """
-    Classifies the sentence against a list of concepts using zero-shot classification.
-
-    Args:
-    sentence (str): The sentence to be classified.
-    concepts (list): A list of concept words or phrases.
-
-    Returns:
-    dict: A dictionary with concept words as keys and their corresponding scores as values.
-    """
-    print(f"Classifying sentence {sentence}")
-    results = classifier(sentence, ai_features, multi_label=True)
-    print(f'Results: {results}')
-    concept_scores = {feature: score for feature, score in zip(results['labels'], results['scores'])}
-    return concept_scores
-
-
-class TextDataset(Dataset):
-    def __init__(self, sentences, hypotheses):
-        self.sentences = sentences
-        self.hypotheses = hypotheses
-
-    def __len__(self):
-        return len(self.sentences)
-
-    def __getitem__(self, idx):
-        return self.sentences[idx], self.hypotheses
-
-
-# Parallel File Processing
-def process_single_file(args):
-    return _process_file_with_classification(*args)
-
-
-def parallel_process_files(file_indices, ai_features, data_files_location):
-    """Parallelize processing of multiple files."""
-
-    for file_index in file_indices:
-        _process_file_with_classification(file_index, ai_features, data_files_location)
-
-    # pool = Pool(processes=min(cpu_count(), 2))  # Use 2 CPU cores
-    # tasks = [(index, ai_features, data_files_location) for index in file_indices]
-    # pool.map(process_single_file, tasks)
-    # pool.close()
-    # pool.join()
-
-def _process_file_with_classification(file_index, ai_features, data_files_location):
-    """Process a single file, compute scores, and save results."""
-    file_name = os.path.join(data_files_location, f'{file_index}_data.csv')
-    data = pd.read_csv(file_name)
-    cluster_text = data['text'].fillna('').astype(str).tolist() # TODO update 'text' to generic term
-
-    start = time.time()
-    # Create DataLoader for batching
-    dataset = TextDataset(cluster_text, ai_features)
-    dataloader = DataLoader(dataset, batch_size=2, shuffle=False, collate_fn=collate_fn)
-
-    scores_list = []
-    for batch_sentences, batch_hypotheses in dataloader:
-        # print(f'Processing batch of size {len(batch_sentences)} in cluster {file_index}')
-        probabilities = _compute_probabilities(batch_sentences, batch_hypotheses)
-        scores_list.extend(probabilities)
-
-    # Convert the list of scores to a DataFrame
-    scores_df = pd.DataFrame(scores_list)
-
-    # Combine the scores with the original dataframe
-    result_df = pd.concat([data, scores_df], axis=1)
-    # Save the result back to the original CSV file
-    result_df.to_csv(file_name, index=False)
-    end = time.time()
-    print(f'Finished processing cluster {file_index} in {end - start:.2f}s')
+# Legacy classifier - keep if you might switch back or use it elsewhere
+# classifier = pipeline("zero-shot-classification", model="MoritzLaurer/deberta-v3-large-zeroshot-v2.0", device=0 if torch.cuda.is_available() else -1)
 
 
 def _compute_probabilities(sentences, hypotheses):
     """
     Computes probabilities for a batch of sentences and hypotheses.
     """
-    # Ensure hypotheses is a flat list of strings
-    if isinstance(hypotheses[0], list):
-        from itertools import chain
-        hypotheses = list(chain.from_iterable(hypotheses))
+    if not sentences or not hypotheses:
+        return []
 
+    # Ensure hypotheses is a flat list of strings.
+    # The way ai_features is generated should already ensure this.
     if not all(isinstance(hypothesis, str) for hypothesis in hypotheses):
-        raise ValueError(f"Invalid hypotheses structure: {hypotheses}")
+        malformed_hypotheses = [h for h in hypotheses if not isinstance(h, str)][:5]
+        raise ValueError(f"Invalid hypotheses structure. All hypotheses must be strings. Found: {malformed_hypotheses} in {hypotheses}")
 
-    # Tokenize in batch
+    # Prepare premise-hypothesis pairs
+    premise_hypothesis_pairs = []
+    for sentence in sentences:
+        for hypothesis in hypotheses:
+            premise_hypothesis_pairs.append((sentence, hypothesis))
+    
+    # Unzip for tokenizer
+    tokenization_sentences, tokenization_hypotheses = zip(*premise_hypothesis_pairs)
+
     try:
         inputs = tokenizer(
-            [sentence for sentence in sentences for _ in hypotheses],
-            hypotheses * len(sentences),
+            list(tokenization_sentences), # list of sentences, repeated
+            list(tokenization_hypotheses), # list of hypotheses, corresponding to sentences
             return_tensors='pt',
             truncation=True,
-            padding=True
+            padding=True,
+            max_length=tokenizer.model_max_length
         ).to(device)
     except Exception as e:
         print("Error during tokenization.")
-        print("Sentences:", sentences)
-        print("Hypotheses:", hypotheses)
+        print("Sentences chunk:", sentences)
+        print("Hypotheses chunk:", hypotheses)
         raise e
 
-    # Perform inference
     with torch.no_grad():
         logits = nli_model(**inputs).logits
 
-    # Extract probabilities
-    entail_contradiction_logits = logits[:, [0, 1]]
-    probs = entail_contradiction_logits.softmax(dim=1)
-    probs_hypothesis_true = probs[:, 1].view(len(sentences), -1).tolist()
+    entail_contradiction_logits = logits[:, [0, 1]] # MoritzLaurer/deberta-v3-large-zeroshot-v2.0 maps entailment to label 2 (index 1 after reordering to [contradiction, entailment]) or specific index based on config.
+                                                   # The original code used probs[:,1] for "hypothesis true", assuming index 1 is entailment.
+                                                   # Default for this model: {"contradiction": 0, "neutral": 1, "entailment": 2}
+                                                   # The pipeline likely reorders/selects entailment and contradiction.
+                                                   # For direct model use: logits for "entailment" (usually index 2) vs "contradiction" (index 0)
+                                                   # MoritzLaurer's pipeline uses entailment vs. contradiction.
+                                                   # Logits shape: (batch_size, num_classes) num_classes is usually 3 (contra, neutral, entail)
+                                                   # We need probability of entailment.
+                                                   # Default order: 0: contradiction, 1: neutral, 2: entailment
+                                                   # The pipeline implementation does:
+                                                   # entail_logits = outputs.logits[:, self.entailment_id]
+                                                   # contradiction_logits = outputs.logits[:, self.contradiction_id]
+                                                   # So we need to pick the correct indices for entailment and contradiction from the model's config.
+                                                   # For "MoritzLaurer/deberta-v3-large-zeroshot-v2.0", entailment_id=2, contradiction_id=0 (from its config)
+    
+    # Correctly extract entailment and contradiction logits based on common practice for NLI models like this one
+    # Typically, label2id: {'contradiction': 0, 'neutral': 1, 'entailment': 2}
+    entail_logits = logits[:, nli_model.config.label2id.get('entailment', 2)]
+    contradiction_logits = logits[:, nli_model.config.label2id.get('contradiction', 0)]
 
-    probabilities = []
+    # Stack them for softmax: effectively [contradiction_logit, entailment_logit] for each pair
+    stacked_logits = torch.stack([contradiction_logits, entail_logits], dim=1)
+    probs = stacked_logits.softmax(dim=1)
+    probs_hypothesis_true = probs[:, 1] # Probability of entailment
+
+    # Reshape to (num_sentences, num_hypotheses_in_chunk)
+    probs_hypothesis_true_reshaped = probs_hypothesis_true.view(len(sentences), len(hypotheses)).tolist()
+
+
+    probabilities_output = []
     for i, sentence in enumerate(sentences):
-        probabilities.append(dict(zip(hypotheses, probs_hypothesis_true[i])))
+        probabilities_output.append(dict(zip(hypotheses, probs_hypothesis_true_reshaped[i])))
 
-    return probabilities
+    del inputs, logits, entail_logits, contradiction_logits, stacked_logits, probs, probs_hypothesis_true, probs_hypothesis_true_reshaped
+    if torch.cuda.is_available():
+        torch.cuda.empty_cache()
 
+    return probabilities_output
+
+
+def _process_file_with_classification(file_index, ai_features, data_files_location, text_col_name, hypothesis_chunk_size=10):
+    """Process a single file, compute scores by chunking hypotheses, and save results."""
+    file_name = os.path.join(data_files_location, f'{file_index}_data.csv')
+    try:
+        data = pd.read_csv(file_name)
+    except FileNotFoundError:
+        print(f"File not found: {file_name}. Skipping.")
+        return
+    except pd.errors.EmptyDataError:
+        print(f"File is empty: {file_name}. Skipping.")
+        return
+
+    if text_col_name not in data.columns:
+        print(f"Text column '{text_col_name}' not found in {file_name}. Skipping.")
+        return
+    
+    cluster_text_list = data[text_col_name].fillna('').astype(str).tolist()
+
+    start_proc_time = time.time()
+    print(f'Starting processing for cluster {file_index} with {len(cluster_text_list)} sentences and {len(ai_features)} features. Max Hypotheses per call: {hypothesis_chunk_size}')
+
+    all_scores_for_file = []
+
+    for idx, sentence_text in enumerate(cluster_text_list):
+        # print(f"  Processing sentence {idx+1}/{len(cluster_text_list)} in cluster {file_index}: {sentence_text[:50]}...") # Verbose
+        if not sentence_text.strip():
+            all_scores_for_file.append({})
+            continue
+
+        sentence_scores = {}
+        for i in range(0, len(ai_features), hypothesis_chunk_size):
+            hypotheses_chunk = ai_features[i:i + hypothesis_chunk_size]
+            if not hypotheses_chunk:
+                continue
+            
+            try:
+                # _compute_probabilities expects a list of sentences. Here, it's a list with one sentence.
+                chunk_probabilities_list = _compute_probabilities([sentence_text], hypotheses_chunk)
+                if chunk_probabilities_list: # It returns a list of dicts; we expect one dict for the one sentence
+                    sentence_scores.update(chunk_probabilities_list[0])
+            except Exception as e:
+                print(f"Error computing probabilities for sentence chunk in cluster {file_index} (sentence {idx+1}, hypothesis chunk {i//hypothesis_chunk_size + 1}): {e}")
+                # Fill with NaN or skip these hypotheses for this sentence
+                for hypo in hypotheses_chunk:
+                    sentence_scores[hypo] = np.nan 
+
+        all_scores_for_file.append(sentence_scores)
+
+    if not all_scores_for_file and not cluster_text_list: # Both text and scores are empty
+        print(f"No text to process in cluster {file_index}.")
+        # Save the original data if it was just empty text column, or do nothing
+        # data.to_csv(file_name, index=False) # Resave if necessary
+        return 
+    elif not all_scores_for_file and cluster_text_list: # Text existed, but all might have been skipped (e.g. all empty strings)
+        scores_df = pd.DataFrame(index=data.index, columns=ai_features if ai_features else None) # Create empty df with correct columns
+    else:
+        scores_df = pd.DataFrame(all_scores_for_file)
+
+    # Align DataFrame index if necessary and concatenate
+    if not scores_df.empty:
+        scores_df.index = data.index[:len(scores_df)] 
+    
+    # Ensure all original ai_features columns exist in scores_df, filling missing ones (e.g. due to errors) with NaN
+    for feature in ai_features:
+        if feature not in scores_df.columns:
+            scores_df[feature] = np.nan
+    
+    # Reorder score_df columns to match ai_features order if desired, though not strictly necessary
+    # if ai_features:
+    #    scores_df = scores_df.reindex(columns=ai_features, fill_value=np.nan)
+
+
+    result_df = pd.concat([data, scores_df], axis=1)
+    
+    try:
+        result_df.to_csv(file_name, index=False)
+    except Exception as e:
+        print(f"Error saving results to {file_name}: {e}")
+
+    end_proc_time = time.time()
+    print(f'Finished processing cluster {file_index} in {end_proc_time - start_proc_time:.2f}s. Processed {len(cluster_text_list)} sentences.')
+
+
+def parallel_process_files(tasks_list):
+    """
+    Processes tasks. Currently sequential, but can be adapted for true parallelism.
+    A task in tasks_list is expected to be a dictionary with necessary arguments.
+    """
+    # Parallelism is currently disabled in the provided code.
+    # If you want to enable it with multiprocessing.Pool:
+    # num_processes = min(cpu_count(), 2) # Or your desired number
+    # print(f"Using {num_processes} processes for parallel execution.")
+    # with Pool(processes=num_processes) as pool:
+    #     pool.map(process_single_file_wrapper, tasks_list) # process_single_file_wrapper would unpack dict task_args
+
+    for task_args in tasks_list:
+        _process_file_with_classification(
+            file_index=task_args["file_index"],
+            ai_features=task_args["ai_features"],
+            data_files_location=task_args["data_files_location"],
+            text_col_name=task_args["text_col_name"],
+            hypothesis_chunk_size=task_args.get("hypothesis_chunk_size", 10) # Default if not provided
+        )
+
+# Wrapper function if you use multiprocessing.Pool.map, which takes a single argument
+# def process_single_file_wrapper(task_args):
+# return _process_file_with_classification(
+# file_index=task_args["file_index"],
+# ai_features=task_args["ai_features"],
+# data_files_location=task_args["data_files_location"],
+# text_col_name=task_args["text_col_name"],
+# hypothesis_chunk_size=task_args.get("hypothesis_chunk_size", 10)
+#     )
 
 
 def _check_ai_features_file(ai_features_file_location: str):
     try:
-        # clustered_ai_features = pd.read_csv(ai_features_file_location, encoding='ISO-8859-1')
-        clustered_ai_features = pd.read_csv(ai_features_file_location)
-        # Validate that all column headers are integers
+        print(f'Reading AI features file: {ai_features_file_location}')
+        clustered_ai_features = pd.read_csv(ai_features_file_location) # Removed encoding, add back if needed
         cols = clustered_ai_features.columns.tolist()
         for col in cols:
-            int(col)  # Will raise ValueError if conversion fails
-
+            int(col) 
         return clustered_ai_features, cols
-
     except FileNotFoundError:
-        raise FileNotFoundError("Error: File not found. Please check the file path.")
-    except pd.errors.EmptyDataError:
-        raise pd.errors.EmptyDataError("Error: The file is empty.")
-    except pd.errors.ParserError:
-        raise pd.errors.ParserError("Error: There was an issue parsing the file. Please check the file format.")
-    except ValueError:
-        raise ValueError("Error: One of the column names is not an integer representing cluster number.")
-    except AttributeError:
-        raise AttributeError("Error: Problem with the DataFrame structure.")
+        raise FileNotFoundError(f"Error: AI features file not found at {ai_features_file_location}.")
+    # ... (other specific exceptions from your original code) ...
     except Exception as e:
-        raise Exception(f"An unexpected error occurred: {e}")
+        raise Exception(f"An unexpected error occurred while checking AI features file: {e}")
 
 
-def deberta_for_llm_features(ai_features_file_location: str, data_files_location: str) -> None:
-    set_start_method("spawn", force=True)
-    print('Torch info for running DeBERTa. Run on GPU')
+def deberta_for_llm_features(
+    ai_features_file_location: str,
+    data_files_location: str,
+    text_col_name: str, # Added text_col_name parameter
+    hypothesis_chunk_size: int = 10 # Added hypothesis_chunk_size with a default
+) -> None:
+    # set_start_method("spawn", force=True) # Usually needed if using CUDA with multiprocessing
+    print('Torch info for running DeBERTa:')
     print(f'Is CUDA available? {torch.cuda.is_available()}')
     print(f'Torch version: {torch.__version__}')
-    # print(f'Torch Device: {torch.cuda.get_device_name(torch.cuda.current_device())}')
+    if torch.cuda.is_available():
+        print(f'Torch Device: {torch.cuda.get_device_name(torch.cuda.current_device())}')
 
     try:
         clustered_ai_features, cols = _check_ai_features_file(ai_features_file_location)
-        # Prepare tasks for parallel processing
-        tasks = []
-        for col in cols:
+        tasks_with_features = []
+        for col in cols: # These 'cols' are expected to be file_index prefixes
             try:
-                start = time.time()
-                ai_features = clustered_ai_features[col].dropna().tolist()
-                tasks.append((col, ai_features, data_files_location))
-            except ValueError:
-                # Skip non-numeric columns if they exist
-                print(f"non-numeric cluster number in ai features file: {col}, exiting")
-                exit(1)
+                # Ensure col is treated as a string key for the DataFrame if it's not already
+                ai_features_for_col = clustered_ai_features[str(col)].dropna().astype(str).tolist()
+                if not ai_features_for_col:
+                    print(f"Warning: No AI features found for cluster {col}. Skipping this cluster's processing logic if it depends on features.")
+                
+                tasks_with_features.append({
+                    "file_index": str(col), # Ensure file_index is a string if cols are numbers
+                    "ai_features": ai_features_for_col,
+                    "data_files_location": data_files_location,
+                    "text_col_name": text_col_name,
+                    "hypothesis_chunk_size": hypothesis_chunk_size
+                })
+            except KeyError:
+                print(f"Warning: Column {col} not found in AI features file. Skipping.")
+            except ValueError: # From int(col) in _check_ai_features_file if cols are not int-like
+                print(f"Non-numeric cluster identifier in AI features file column name: {col}. Treating as string identifier.")
+                # Adapt as needed if column names are not purely numeric strings
+                ai_features_for_col = clustered_ai_features[col].dropna().astype(str).tolist()
+                tasks_with_features.append({
+                    "file_index": str(col),
+                    "ai_features": ai_features_for_col,
+                    "data_files_location": data_files_location,
+                    "text_col_name": text_col_name,
+                    "hypothesis_chunk_size": hypothesis_chunk_size
+                })
 
-        # Parallelize file processing
-        parallel_process_files([task[0] for task in tasks], ai_features, data_files_location)
+
+        if not tasks_with_features:
+            print("No tasks to process based on the AI features file.")
+            return
+
+        parallel_process_files(tasks_with_features)
     except Exception as e:
-        print(e)
+        print(f"An error occurred in deberta_for_llm_features: {e}") # More specific error message
+        raise # Re-raise after printing
 
 
 if __name__ == '__main__':
-    print('Torch info for running DeBERTa. Run on GPU')
-    print(torch.cuda.is_available())
-    print(torch.__version__)
-#    print(torch.cuda.get_device_name(torch.cuda.current_device()))
-    clustered_ai_features = pd.read_csv('ai_features2.csv', encoding='ISO-8859-1')
-    cols = clustered_ai_features.columns.tolist()
+    # It's good practice to set the start_method for multiprocessing at the very beginning of the main block
+    # if you intend to use multiprocessing with CUDA.
+    #try:
+    #    set_start_method("spawn", force=True)
+    #except RuntimeError:
+    #    print("set_start_method has already been called or context is not appropriate (e.g. not main module).")
 
-    print('start')
-    start = time.time()
-    ai_features_loc = 'clustered_ai_features.csv'
-    destination = 'clusters csv'
-    deberta_for_llm_features(ai_features_loc, destination)
-    end = time.time()
-    print(f'Finished processing all clusters, took {end - start:.2f}s')
 
-    #
-    # for col in cols:
-    #     # Ensure the column name is numeric (if needed) by converting it to int
-    #     try:
-    #         cluster_index = int(col)
-    #         ai_features = clustered_ai_features[col].dropna().tolist()
-    #
-    #         # process_file(cluster_index, ai_features)
-    #         # process_file_dimension_wise(cluster_index, ai_features)
-    #         _process_file_with_classification(cluster_index, ai_features, 'clusters csv')
-    #
-    #         print(f"Processing complete for file {cluster_index}_data.csv")
-    #
-    #     except ValueError:
-    #         # Skip non-numeric columns if they exist
-    #         print(f"Skipping non-numeric column: {col}")
+    print('--- DeBERTa Zero-Shot Classification ---')
+    
+    # Configuration
+    ai_features_csv_path = 'clustered_ai_features.csv' # Path to your CSV with AI features/hypotheses
+    data_input_folder = 'clusters_csv' # Folder containing the data CSVs to be processed
+    text_column_in_data_csv = 'text'   # The name of the column containing text to classify in your data CSVs
+    # Adjust hypothesis_chunk_size based on your VRAM capacity and number/length of hypotheses.
+    # Start small (e.g., 5-10) and increase if you have VRAM to spare.
+    chunk_size_for_hypotheses = 10
+
+    print(f"AI Features File: {ai_features_csv_path}")
+    print(f"Data Folder: {data_input_folder}")
+    print(f"Text Column Name in data files: {text_column_in_data_csv}")
+    print(f"Hypothesis Chunk Size: {chunk_size_for_hypotheses}")
+    print('--- Starting processing ---')
+    
+    start_time = time.time()
+    try:
+        deberta_for_llm_features(
+            ai_features_file_location=ai_features_csv_path,
+            data_files_location=data_input_folder,
+            text_col_name=text_column_in_data_csv,
+            hypothesis_chunk_size=chunk_size_for_hypotheses
+        )
+    except Exception as e:
+        print(f"Main execution failed: {e}")
+    finally:
+        end_time = time.time()
+        print(f'--- Finished processing all tasks. Total time: {end_time - start_time:.2f}s ---')
