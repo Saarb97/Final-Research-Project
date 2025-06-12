@@ -237,20 +237,11 @@ def llm_feature_extraction_for_clusters_folder(client, clusters_files_loc: str, 
     return llm_features_pd
 
 
-def llm_feature_extraction_for_cluster_csv_dspy(text_file_loc, text_col_name, model="gpt-4o-mini"):
+def llm_feature_extraction_for_cluster_csv_dspy(text_file_loc, text_col_name, instruction, model="gpt-4o-mini"):
     # Token limit set for gpt 4/o/o1/o-mini/o1-mini (including output)
     TOKEN_LIMIT_PER_PROMPT = 128_000  # Full model context window
     RESERVED_TOKENS = 8_000  # Reserved for internal model use, unknown factors
     OUTPUT_TOKEN_ESTIMATE = 2_500  # Increased estimate for safety margin for the JSON output with 25 subthemes
-
-    instruction = (
-        "Analyze this series of stories and questions to identify exactly five main recurring themes. "
-        "These themes should comprehensively reflect patterns in characters' actions, traits, and dynamics, "
-        "capturing both explicit and subtle ideas across the scenarios. "
-        "After identifying the five main themes, expand on each theme by identifying exactly five specific and coherent subthemes "
-        "that provide more detail and depth. Ensure each theme is accompanied by precisely five subthemes, with no overlaps or omissions. "
-        "Do not skip or summarize steps, and ensure the output strictly adheres to the required structure."
-    )
 
     df = pd.read_csv(text_file_loc)
 
@@ -350,7 +341,7 @@ def llm_feature_extraction_for_cluster_csv_dspy(text_file_loc, text_col_name, mo
     return all_results
 
 
-def llm_feature_extraction_for_clusters_folder_dspy(clusters_files_loc: str, text_col_name: str,
+def llm_feature_extraction_for_clusters_folder_dspy(clusters_files_loc: str, text_col_name: str, instruction: str,
                                                model: str = "gpt-4o-mini") -> pd.DataFrame:
 
     num_of_clusters = _count_cluster_files(clusters_files_loc)
@@ -360,7 +351,7 @@ def llm_feature_extraction_for_clusters_folder_dspy(clusters_files_loc: str, tex
     for i in range(num_of_clusters):
         cluster_file = os.path.join(clusters_files_loc, f"{i}_data.csv")  # Construct file name
         try:
-            features = llm_feature_extraction_for_cluster_csv_dspy(cluster_file, text_col_name, model)
+            features = llm_feature_extraction_for_cluster_csv_dspy(cluster_file, text_col_name, instruction, model)
             # llm_features_pd[f"{i}"] = features
             temp_df = pd.DataFrame({f"{i}": features})
             # Concatenate with the main DataFrame, aligning indexes and allowing for NaN values

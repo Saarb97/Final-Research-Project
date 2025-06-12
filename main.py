@@ -123,7 +123,7 @@ def _check_and_create_folder(folder_path):
     #             print("Invalid response. Please reply with 'Y' or 'N'.")
 
 
-def main(openai_api_key, data_path, text_col_name, target_col_name):
+def main(openai_api_key, data_path, text_col_name, target_col_name, instruction):
     # Runs only on scipy==1.12 because of gensim requirement of deprecated function
     print(f'cuda.is_available: {torch.cuda.is_available()}')
     print(f'torch.cuda.device_count(): {torch.cuda.device_count()}')
@@ -134,41 +134,28 @@ def main(openai_api_key, data_path, text_col_name, target_col_name):
     VALID_STEPS = range(1, 7)  # Steps 1 to 6
 
     _ensure_spacy_model()
-    print("DEBUG: main - Spacy model ensured.")
     _ensure_textblob_corpora()
-    print("DEBUG: main - Textblob corpora ensured. This is AFTER 'Finished.' from textblob.") # Key marker
     
-    print("DEBUG: main - Defining folder paths...")
     clusters_files_loc = os.path.join('imdb', 'clusters')
-    print(f"DEBUG: main - clusters_files_loc = {clusters_files_loc}")
     xgboost_files_loc = os.path.join(clusters_files_loc, 'xgboost_files')
-    print(f"DEBUG: main - xgboost_files_loc = {xgboost_files_loc}")
     results_files_loc = os.path.join(clusters_files_loc, 'results')
-    print(f"DEBUG: main - results_files_loc = {results_files_loc}")
     ai_features_loc = 'clustered_ai_features.csv'
-    print(f"DEBUG: main - ai_features_loc defined: {ai_features_loc}")
     
-    print("DEBUG: main - Checking/creating clusters_files_loc...")
     if not _check_and_create_folder(clusters_files_loc):
         print("failed to create clusters folder. Exiting.")
         sys.exit()
-    print("DEBUG: main - clusters_files_loc OK.")
     
-    print("DEBUG: main - Checking/creating xgboost_files_loc...")
     if not _check_and_create_folder(xgboost_files_loc):
         print("failed to create xgboost folder. Exiting.")
         sys.exit()
-    print("DEBUG: main - xgboost_files_loc OK.")
     
-    print("DEBUG: main - Checking/creating results_files_loc...")
     if not _check_and_create_folder(results_files_loc):
         print("failed to create results folder. Exiting.")
         sys.exit()
-    print("DEBUG: main - results_files_loc OK.")
-    
-    print("DEBUG: main - Initializing start_whole and start_step...")
+
+
     start_whole = time.time()
-    start_step = 4 # Current hardcoded value
+    start_step = 1 # Current hardcoded value
     print(f"DEBUG: main - start_step = {start_step}")
     
     # Step 1: Feature extraction
@@ -213,7 +200,7 @@ def main(openai_api_key, data_path, text_col_name, target_col_name):
         dspy.configure(lm=lm)
         llm_features_pd = (llm_api_feature_extraction.
                            llm_feature_extraction_for_clusters_folder_dspy(clusters_files_loc, text_col_name,
-                                                                           model="gpt-4o-mini"))
+                                                                           instruction, model="gpt-4o-mini"))
 
         ai_features_file_name = os.path.join(clusters_files_loc, 'llm_features_per_cluster.csv')
         llm_features_pd.to_csv(ai_features_file_name, index=False)
@@ -261,8 +248,21 @@ def main(openai_api_key, data_path, text_col_name, target_col_name):
 
 
 if __name__ == '__main__':
+
+    # Need to adjust instruction to reflect the context of the dataset analyzed.
+    # MUST keep the references to the structure - "five main recurring themes".
+    # MUST keep the last three sentences, ONLY change the first 3 as needed.
+    instruction = (
+        "Analyze this series of stories and questions to identify exactly five main recurring themes. "
+        "These themes should comprehensively reflect patterns in characters' actions, traits, and dynamics, "
+        "capturing both explicit and subtle ideas across the scenarios. "
+        "After identifying the five main themes, expand on each theme by identifying exactly five specific and coherent subthemes "
+        "that provide more detail and depth. Ensure each theme is accompanied by precisely five subthemes, with no overlaps or omissions. "
+        "Do not skip or summarize steps, and ensure the output strictly adheres to the required structure."
+    )
+
     api_key = os.getenv('OPENAI_KEY')
-    main(api_key, data_path='imdb/experiment_ready_data.csv', text_col_name='review', target_col_name='performance')
+    main(api_key, data_path='imdb/bert_clustered_with_umap_experiment_ready.csv', text_col_name='review', target_col_name='performance' , instruction=instruction)
 
     # df = pd.read_csv('twitter sentiment/raw/twitter_training.csv')
     # print(f'len before processing: {len(df)}')
