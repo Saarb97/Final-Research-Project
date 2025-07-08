@@ -46,15 +46,16 @@ def clean_text_column(df, text_col_name):
     # Apply the filter
     df = df[df[text_col_name].apply(has_valid_content)]
     cur_len = len(df)
-    print(f"Clean dataset's text. started with {start_len} rows, after cleaning: {cur_len}")
+    removed = start_len - cur_len
+    print(f"Clean dataset's text. started with {start_len} rows, after cleaning: {cur_len}, {removed} lines removed. ")
     return df
 
 
-def _count_cluster_files(clusters_files_loc):
+def _count_cluster_files(clusters_dir):
     # Match files with the pattern "<cluster>_data.csv"
     cluster_files = [
-        f for f in os.listdir(clusters_files_loc)
-        if os.path.isfile(os.path.join(clusters_files_loc, f)) and f.endswith("_data.csv")
+        f for f in os.listdir(clusters_dir)
+        if os.path.isfile(os.path.join(clusters_dir, f)) and f.endswith("_data.csv")
     ]
     return len(cluster_files)
 
@@ -92,16 +93,6 @@ def _ensure_textblob_corpora():
             print(f"An error occurred while installing TextBlob corpora: {e}")
             sys.exit(1)  # Exit on failure to ensure script stops if corpora are critical
 
-
-def _check_and_create_folder(folder_path):
-    if os.path.exists(folder_path):
-        return True
-    else:
-        try:
-            os.makedirs(folder_path)
-            return True
-        except Exception as e:
-            return False
     # if os.path.exists(folder_path):
     #     return True
     # else:
@@ -123,7 +114,7 @@ def _check_and_create_folder(folder_path):
     #             print("Invalid response. Please reply with 'Y' or 'N'.")
 
 
-def main(openai_api_key, data_path, text_col_name, target_col_name, instruction):
+def main(openai_api_key, data_path, text_col_name, target_col_name, folder_name, instruction, start_step):
     # Runs only on scipy==1.12 because of gensim requirement of deprecated function
     print(f'cuda.is_available: {torch.cuda.is_available()}')
     print(f'torch.cuda.device_count(): {torch.cuda.device_count()}')
@@ -133,49 +124,56 @@ def main(openai_api_key, data_path, text_col_name, target_col_name, instruction)
     print(f"Device Name: {torch.cuda.get_device_name(0) if torch.cuda.is_available() else 'No GPU'}")
     VALID_STEPS = range(1, 7)  # Steps 1 to 6
 
+    # Ensuring prerequsite spacy and textblob data exists, if not download them.
+    # Necessery for NLP feature extraction.
     _ensure_spacy_model()
     _ensure_textblob_corpora()
     
-    clusters_files_loc = os.path.join('imdb', 'clusters')
-    xgboost_files_loc = os.path.join(clusters_files_loc, 'xgboost_files')
-    results_files_loc = os.path.join(clusters_files_loc, 'results')
-    ai_features_loc = 'clustered_ai_features.csv'
+    clusters_dir    = os.path.join(folder_name, "clusters")
+    xgboost_dir     = os.path.join(clusters_dir, "xgboost_files")
+    results_dir     = os.path.join(clusters_dir, "results")
+    ai_features_loc = os.path.join(clusters_dir, "clustered_ai_features.csv")
+    dataset_with_nlp_features_file_name = 'test_feature_extraction_file.csv'
+
+    # Currently ONLY working with OpenAI models, as the token counter is tiktoken - Used only for OpenAI models!
+    openai_model_name = 'gpt-4o-mini'
+    dspy_llm_model_name = 'openai/' + openai_model_name
     
-    if not _check_and_create_folder(clusters_files_loc):
-        print("failed to create clusters folder. Exiting.")
-        sys.exit()
-    
-    if not _check_and_create_folder(xgboost_files_loc):
-        print("failed to create xgboost folder. Exiting.")
-        sys.exit()
-    
-    if not _check_and_create_folder(results_files_loc):
-        print("failed to create results folder. Exiting.")
-        sys.exit()
+    try:
+        # each call creates all missing parents
+        os.makedirs(xgboost_dir, exist_ok=True)
+        os.makedirs(results_dir, exist_ok=True)
+    except OSError as err:         
+        print(f"Failed to create pipeline folders: {err}")
+        sys.exit(1)                
 
 
     start_whole = time.time()
-    start_step = 1 # Current hardcoded value
+    # start_step = 6 # Current hardcoded value
     print(f"DEBUG: main - start_step = {start_step}")
+
+    print(f"data_path provided: {data_path}")
+    print(f"text_col_name column provided: {text_col_name}")
+    print(f"target_col_name column provided: {target_col_name}")
+    print(f"folder_name column provided: {folder_name}")
     
     # Step 1: Feature extraction
     if start_step <= 1:
         print("Starting from Step 1: Feature Extraction")
         start = time.time()
         df = pd.read_csv(data_path)
-        # df = load_data(os.path.join('twitter sentiment', 'twitter_clustering24_11_24.csv'))
-
-        # Clean text column
-        print(f'text column name:{text_col_name}')
         df = clean_text_column(df, text_col_name)
-
         df_with_features = feature_extraction.generic_feature_extraction_parallel(df, text_col_name, 56)
-        df_with_features.to_csv(os.path.join(clusters_files_loc, 'test_feature_extraction_file.csv'), index=False)
+        df_with_features.to_csv(os.path.join(clusters_dir, dataset_with_nlp_features_file_name), index=False)
         elapsed = round(time.time() - start)
         print(f'Time for basic feature extraction: {elapsed} seconds')
     else:
         print("Skipping Step 1: Loading previously saved features")
-        df_with_features = pd.read_csv(os.path.join(clusters_files_loc, 'test_feature_extraction_file.csv'))
+        try:
+            df_with_features = pd.read_csv(os.path.join(clusters_dir, dataset_with_nlp_features_file_name))
+        except Exception as e:
+            print(f"Step 1 was skipped but no dataset file with precomputed features was found at test_feature_extraction_file.csv")
+            raise e
 
     # Step 2: Cluster splitting
     # Will merge clusters that have a single label in their target feature
@@ -183,38 +181,38 @@ def main(openai_api_key, data_path, text_col_name, target_col_name, instruction)
     if start_step <= 2:
         print("Step 2: Cluster Splitting")
         start = time.time()
-        num_of_clusters = create_summarized_table.split_clusters_data(df_with_features, clusters_files_loc)
+        num_of_clusters = create_summarized_table.split_clusters_data(df_with_features, clusters_dir)
         elapsed = round(time.time() - start)
         print(f'Time for cluster splitting: {elapsed} seconds')
     else:
         print("Skipping Step 2: Using precomputed clusters")
-        num_of_clusters = _count_cluster_files(clusters_files_loc)
+        num_of_clusters = _count_cluster_files(clusters_dir)
 
     # Step 3: extracting LLM features from Open AI's GPT model
     if start_step <= 3:
         print("Step 3: extracting LLM features from Open AI's GPT model")
         start = time.time()
-        lm = dspy.LM('openai/gpt-4o-mini',
+        lm = dspy.LM(dspy_llm_model_name,
                      api_key=openai_api_key,
                      cache=False)
         dspy.configure(lm=lm)
         llm_features_pd = (llm_api_feature_extraction.
-                           llm_feature_extraction_for_clusters_folder_dspy(clusters_files_loc, text_col_name,
-                                                                           instruction, model="gpt-4o-mini"))
+                           llm_feature_extraction_for_clusters_folder_dspy(clusters_dir, text_col_name,
+                                                                           instruction, model=openai_model_name))
 
-        ai_features_file_name = os.path.join(clusters_files_loc, 'llm_features_per_cluster.csv')
+        ai_features_file_name = os.path.join(clusters_dir, 'llm_features_per_cluster.csv')
         llm_features_pd.to_csv(ai_features_file_name, index=False)
         elapsed = round(time.time() - start)
         print(f'Time for  extracting LLM features from OpenAI GPT model: {elapsed} seconds')
     else:
         print("Skipping Step 3: Assuming llm features file already exists.")
-        ai_features_file_name = os.path.join(clusters_files_loc, 'llm_features_per_cluster.csv')
+        ai_features_file_name = os.path.join(clusters_dir, 'llm_features_per_cluster.csv')
 
     # Step 4: DeBERTa for LLM features
     if start_step <= 4:
         print("Step 4: DeBERTa for LLM features")
         start = time.time()
-        deberta_for_llm_features(ai_features_file_name, clusters_files_loc, text_col_name)
+        deberta_for_llm_features(ai_features_file_name, clusters_dir, text_col_name)
         elapsed = round(time.time() - start)
         print(f'Time for running DeBERTa on LLM features: {elapsed} seconds')
 
@@ -222,7 +220,7 @@ def main(openai_api_key, data_path, text_col_name, target_col_name, instruction)
     if start_step <= 5:
         print("Step 5: Summarized Tables Creation")
         start = time.time()
-        create_summarized_table.create_summarized_tables(df_with_features, text_col_name, target_col_name, clusters_files_loc,
+        create_summarized_table.create_summarized_tables(df_with_features, text_col_name, target_col_name, clusters_dir,
                                                          num_of_clusters)
         elapsed = round(time.time() - start)
         print(f'Time for summarized table creation: {elapsed} seconds')
@@ -231,7 +229,7 @@ def main(openai_api_key, data_path, text_col_name, target_col_name, instruction)
     if start_step <= 6:
         print("Step 6: XGBoost Models")
         start = time.time()
-        xgboost_clusters.main_kfold(clusters_files_loc, num_of_clusters, xgboost_files_loc, text_col_name, target_col_name)
+        xgboost_clusters.main_kfold(clusters_dir, num_of_clusters, xgboost_dir, text_col_name, target_col_name)
         elapsed = round(time.time() - start)
         print(f'Time for running XGBoost models: {elapsed} seconds')
 
@@ -239,7 +237,7 @@ def main(openai_api_key, data_path, text_col_name, target_col_name, instruction)
     if start_step <= 7:
         print("Step 7: Result Analysis")
         start = time.time()
-        result_analysis.analyse_results(clusters_files_loc, num_of_clusters, results_files_loc, text_col_name, target_col_name)
+        result_analysis.analyse_results(clusters_dir, num_of_clusters, results_dir, text_col_name, target_col_name)
         elapsed = round(time.time() - start)
         print(f'Time for result analysis: {elapsed} seconds')
 
@@ -251,8 +249,8 @@ if __name__ == '__main__':
 
     # Need to adjust instruction to reflect the context of the dataset analyzed.
     # MUST keep the references to the structure - "five main recurring themes".
-    # MUST keep the last three sentences, ONLY change the first 3 as needed.
-    instruction = (
+    # ONLY change the first part before "After identifying..." .
+    general_instruction = (
         "Analyze this series of stories and questions to identify exactly five main recurring themes. "
         "These themes should comprehensively reflect patterns in characters' actions, traits, and dynamics, "
         "capturing both explicit and subtle ideas across the scenarios. "
@@ -260,20 +258,23 @@ if __name__ == '__main__':
         "that provide more detail and depth. Ensure each theme is accompanied by precisely five subthemes, with no overlaps or omissions. "
         "Do not skip or summarize steps, and ensure the output strictly adheres to the required structure."
     )
+    IMDB_INSTRUCTION = (
+        "Analyze this collection of IMDb movie reviews to identify exactly five main recurring themes. "
+        "These themes should capture common aspects that reviewers evaluate—such as story, "
+        "acting performances, visual style, pacing, or emotional impact—reflecting patterns in evaluative language and viewpoints. "
+        "Include both explicit sentiments and nuanced cues embedded in the descriptions of the films. "
+        "After identifying the five main themes, expand on each theme by identifying exactly five specific and coherent subthemes "
+        "that provide more detail and depth. Ensure each theme is accompanied by precisely five subthemes, with no overlaps or omissions. "
+        "Do not skip or summarize steps, and ensure the output strictly adheres to the required structure."
+)
 
     api_key = os.getenv('OPENAI_KEY')
-    main(api_key, data_path='imdb/bert_clustered_with_umap_experiment_ready.csv', text_col_name='review', target_col_name='performance' , instruction=instruction)
+    
+    main(api_key, data_path='imdb_kmeans/bert_clustered_with_kmeans_experiment_ready.csv', text_col_name='review',
+         target_col_name='performance', folder_name='imdb_kmeans', instruction=IMDB_INSTRUCTION, start_step=7)
 
-    # df = pd.read_csv('twitter sentiment/raw/twitter_training.csv')
-    # print(f'len before processing: {len(df)}')
-    # df = clean_text_column(df, text_col_name='text')
-    # print(f'len after processing: {len(df)}')
-    # df['text'] = df['topic'].astype(str) + ' ' + df['text'].astype(str)
-    # df.to_csv('twitter sentiment/processed/twitter_training.csv', index=False)
-    #
-    # df = pd.read_csv('twitter sentiment/raw/twitter_validation.csv')
-    # print(f'len before processing: {len(df)}')
-    # df = clean_text_column(df, text_col_name='text')
-    # print(f'len after processing: {len(df)}')
-    # df['text'] = df['topic'].astype(str) + ' ' + df['text'].astype(str)
-    # df.to_csv('twitter sentiment/processed/twitter_validation.csv', index=False)
+    main(api_key, data_path='imdb_umap/bert_clustered_with_umap_experiment_ready.csv', text_col_name='review',
+         target_col_name='performance', folder_name='imdb_umap', instruction=IMDB_INSTRUCTION, start_step=7)
+
+    # main(api_key, data_path='imdb_one/bert_test_experiment_ready.csv', text_col_name='review',
+        #  target_col_name='performance', folder_name='imdb_one', instruction=IMDB_INSTRUCTION, start_step=1)
