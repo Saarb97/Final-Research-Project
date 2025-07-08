@@ -17,6 +17,8 @@ import numpy as np
 import os
 import traceback
 import time
+from pathlib import Path
+import joblib
 
 def load_and_prepare_data(file_name, text_col_name):
     """Load data from a CSV file and prepare it for modeling."""
@@ -30,7 +32,7 @@ def load_and_prepare_data(file_name, text_col_name):
     data.drop(columns=existing_columns_to_drop, inplace=True)
     return data
 
-def get_shap_feature_importance(data_file_name, text_col_name, target_col_name):
+def get_shap_feature_importance(data_file_name, cluster_model_loc, text_col_name, target_col_name):
     """
     Get SHAP feature importance with additional safeguards against empty data.
     """
@@ -48,18 +50,31 @@ def get_shap_feature_importance(data_file_name, text_col_name, target_col_name):
         if len(y.unique()) < 2:
             print(f"Only one class present in {data_file_name}")
             return None
+
+        try:
+            # Load XGBoost model for this cluster from previous step.
+            # Currently only loading the first fold model. TODO: Expand to aggregate the results of 5 models from 5 folds.
+            bundle = joblib.load(cluster_model_loc)
+            model     = bundle["model"]
+            feat_names = bundle["features"]
+    
+            # Can consider failsafe of subsampling the feature set from the model,
+            # but it is all created in the pipeline.
+            # X_sample = full_dataframe[feat_names]
             
-        # Configure XGBoost to use appropriate number of threads
-        # Let XGBoost use all available cores for this single task
-        model = train_xgboost_with_SMOTE(X, y)
-        
-        # Guard against possible NaN values from model
-        if model is None:
-            print(f"XGBoost model training failed for {data_file_name}")
-            return None
-        
+            # Guard against possible NaN values from model
+            if model is None:
+                raise Exception(f"Model at {cluster_model_loc} doesn't exist or corrupted. Training a backup model.")
+                
+        except Exception as e:
+            print(e)
+            model = train_xgboost_with_SMOTE(X, y)
+            if model is None:
+                print(f"XGBoost model training failed for {data_file_name}")
+                
+
+    
         # Raw log odds feature importance
-        import shap
         explainer = shap.TreeExplainer(model)
         shap_values = explainer.shap_values(X)
         
@@ -205,6 +220,10 @@ def analyse_results(results_folder_location: str, num_of_clusters: int, destinat
         text_col_name: Name of the text column to exclude
         target_col_name: Name of the target column
     """
+
+    XGBOOST_MODELS_FOLDER = os.path.join(results_folder_location, 'xgboost_files', 'models')
+    # Using the first fold model for SHAP for now
+    
     # Make sure the destination directory exists
     os.makedirs(destination, exist_ok=True)
     
@@ -219,10 +238,15 @@ def analyse_results(results_folder_location: str, num_of_clusters: int, destinat
     # Create a tqdm progress bar
     for i in tqdm(range(num_of_clusters), desc="Analyzing clusters", unit="cluster"):
         cluster_start_time = time.time()
+
+        model_file_name = f"cluster{i}_fold0.pkl"
+        
+        # Using the first fold model for SHAP for now
+        cluster_model_loc = os.path.join(XGBOOST_MODELS_FOLDER, model_file_name)
         
         # Using tqdm.write to avoid interfering with progress bar
         tqdm.write(f'Cluster {i} out of {num_of_clusters} analysis began')
-        
+
         try:
             data_file_name = os.path.join(results_folder_location, f'{i}_data.csv')
             data_df = load_and_prepare_data(data_file_name, text_col_name)
@@ -251,13 +275,16 @@ def analyse_results(results_folder_location: str, num_of_clusters: int, destinat
             X = data_df[significant_features]
             y = data_df[target_col_name]
 
+            # TOP X Features to display
             num_of_features = 10
-            tqdm.write(f"Cluster {i}: Running logistic regression")
-            statistical_important_features = run_logistic_regression(X, y, num_of_features)
-            statistical_important_features.to_csv(os.path.join(destination, f'{i}_statistical.csv'), index=False)
+
+            
+            # tqdm.write(f"Cluster {i}: Running logistic regression")
+            # statistical_important_features = run_logistic_regression(X, y, num_of_features)
+            # statistical_important_features.to_csv(os.path.join(destination, f'{i}_statistical.csv'), index=False)
 
             tqdm.write(f"Cluster {i}: Starting SHAP analysis")
-            shap_feature_importance = get_shap_feature_importance(data_file_name, text_col_name, target_col_name)
+            shap_feature_importance = get_shap_feature_importance(data_file_name, cluster_model_loc, text_col_name, target_col_name)
             if shap_feature_importance is not None:
                 shap_feature_importance.head(num_of_features).to_csv(os.path.join(destination, f'{i}_shap.csv'), index=False)
                 successful_clusters += 1
