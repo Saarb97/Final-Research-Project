@@ -8,17 +8,28 @@ from openai import OpenAI
 from concurrent.futures import ThreadPoolExecutor, as_completed
 from dotenv import load_dotenv
 
+'''
+Embedding benchmark (MTEB) leaderboard shows superior performane of many other
+models comapred to OpenAI emedding models - also when focusing on clustering performance.
+At the time of writing (10.07.25) Qwen3-Embedding-8B is mostly ahead of the competition on most tasks.
+On clustering it achieved a score of 57.65 compared to 46.09 for text-embedding-3-small of OpenAI.
+Check
+https://huggingface.co/spaces/mteb/leaderboard
+
+Can also think about clustering test on the used datasets, with the basics from here:
+https://cookbook.openai.com/examples/zero-shot_classification_with_embeddings
+'''
+
+
+
 # Load environment variables from a .env file
 load_dotenv()
-
-# Set your OpenAI API key
 api_key = os.getenv('OPENAI_KEY')
+
 # Initialize the OpenAI client
-# Note: Initializing the client outside the function is fine,
-# as it's generally thread-safe for making requests.
 client = OpenAI(api_key=api_key)
 
-# Define the embedding model and related parameters
+# Embedding model and related parameters
 embedding_model = "text-embedding-3-small"
 embedding_encoding = "cl100k_base"
 # The maximum tokens for text-embedding-3-small is 8191, using 8000 as a safe limit
